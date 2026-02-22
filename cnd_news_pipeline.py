@@ -1,3 +1,32 @@
+"""
+Creator News Pipeline
+
+Main pipeline script for fetching news from Brave Search API, rewriting articles
+using local LLM or external AI providers, and creating WordPress posts.
+
+This script:
+1. Fetches news articles based on configured search terms
+2. Rewrites content using AI (local llama.cpp or external providers)
+3. Creates WordPress posts with categories and tags
+4. Generates featured images and OG images
+
+Environment Variables (can also be set in config.json):
+    BRAVE_API_KEY(S)     - Brave Search API key(s)
+    WP_API_BASE          - WordPress REST API base URL
+    WP_USER              - WordPress username
+    WP_APP_PASSWORD      - WordPress application password
+    LOCAL_LLM_BASE_URL   - Local LLM server URL (default: http://172.17.0.1:1240)
+    LOCAL_LLM_MODEL      - Model name for local LLM
+    DASHBOARD_URL        - Dashboard URL for status updates
+    PUBLISH_MODE         - 'draft' or 'publish'
+
+Usage:
+    python3 cnd_news_pipeline.py
+
+Author: Matthew Murphy
+License: MIT
+"""
+
 import os
 import json
 import requests
@@ -5,29 +34,57 @@ import datetime as dt
 import random
 from typing import List, Dict, Any, Optional
 
+# ============================================================================
+# Configuration - Environment Variables
+# ============================================================================
+
+# Brave Search API configuration
+# Multiple keys can be provided for rate limiting - script will rotate through them
 BRAVE_API_KEY = os.environ.get("BRAVE_API_KEY", "")
 BRAVE_API_KEYS_JSON = os.environ.get("BRAVE_API_KEYS_JSON", "[]")
+
+# WordPress configuration
 WP_API_BASE = os.environ.get("WP_API_BASE", "")
 WP_USER = os.environ.get("WP_USER", "")
 WP_APP_PASSWORD = os.environ.get("WP_APP_PASSWORD", "")
+
+# Local LLM configuration (llama.cpp with OpenAI-compatible proxy)
+# The local LLM server should be running at the specified URL
 LOCAL_LLM_BASE_URL = os.environ.get("LOCAL_LLM_BASE_URL", "http://172.17.0.1:1240")
 LOCAL_LLM_MODEL = os.environ.get("LOCAL_LLM_MODEL", "Mistral-7B-Instruct-v0.3-Q4_K_M.gguf")
+
+# Search and publishing configuration
 SEARCH_TERMS_JSON = os.environ.get("SEARCH_TERMS_JSON", "[]")
 WP_AUTH_PROFILES = os.environ.get("WP_AUTH_PROFILES", "[]")
 WP_AUTH_WEIGHTS = os.environ.get("WP_AUTH_WEIGHTS", "[]")
-PUBLISH_MODE = os.environ.get("PUBLISH_MODE", "draft")
+PUBLISH_MODE = os.environ.get("PUBLISH_MODE", "draft")  # 'draft' or 'publish'
 BACKFILL_WINDOW_DAYS = int(os.environ.get("BACKFILL_WINDOW_DAYS", "10"))
 
+# File paths for status and caching
 STATUS_FILE = "pipeline_status.json"
 DASHBOARD_URL = os.environ.get("DASHBOARD_URL", "http://localhost:8000")
 CONFIG_FILE = "config.json"
 
-PROCESSED_FILE = ".processed_urls.json"
-CACHE_FILE = ".wp_cache.json"
+# Cache files to avoid duplicate processing
+PROCESSED_FILE = ".processed_urls.json"  # URLs already processed
+CACHE_FILE = ".wp_cache.json"           # WordPress cache for categories/tags
 
+# Global WordPress cache
+# Stores fetched categories, tags, and authors to reduce API calls
 wp_cache = {}
 
+
 def load_wp_cache():
+    """
+    Load WordPress cache from JSON file.
+    
+    The cache stores:
+    - Categories (id -> name mapping)
+    - Tags (id -> name mapping)
+    - Authors (id -> name mapping)
+    
+    This reduces API calls to WordPress during pipeline execution.
+    """
     global wp_cache
     if os.path.exists(CACHE_FILE):
         try:
@@ -35,10 +92,23 @@ def load_wp_cache():
         except:
             wp_cache = {}
 
+
 def save_wp_cache():
+    """
+    Save WordPress cache to JSON file.
+    
+    Called after pipeline completes to persist cache for next run.
+    """
     json.dump(wp_cache, open(CACHE_FILE, "w"), indent=2)
 
+
 def load_config() -> Dict:
+    """
+    Load configuration from config.json file.
+    
+    Returns:
+        dict: Configuration dictionary or empty dict if file doesn't exist
+    """
     if os.path.exists(CONFIG_FILE):
         try:
             return json.load(open(CONFIG_FILE))
@@ -46,7 +116,14 @@ def load_config() -> Dict:
             pass
     return {}
 
+
 def load_processed() -> set:
+    """
+    Load set of already-processed URLs.
+    
+    Returns:
+        set: Set of URLs that have already been processed
+    """
     if os.path.exists(PROCESSED_FILE):
         try:
             return set(json.load(open(PROCESSED_FILE)))
@@ -54,403 +131,397 @@ def load_processed() -> set:
             pass
     return set()
 
+
 def save_processed(urls: set):
+    """
+    Save processed URLs to file.
+    
+    Args:
+        urls (set): Set of URLs to save
+    """
     json.dump(list(urls), open(PROCESSED_FILE, "w"), indent=2)
 
+
 def get_wp_categories(auth) -> Dict[int, Dict]:
+    """
+    Fetch all WordPress categories for the site.
+    
+    Uses WP REST API to get categories, caches results in wp_cache.
+    
+    Args:
+        auth (dict): Authentication configuration with 'api_base', 'user', 'password'
+    
+    Returns:
+        dict: Category ID -> category data mapping
+    """
     global wp_cache
-    categories = {}
+    
+    # Check cache first
+    if "categories" in wp_cache:
+        return wp_cache["categories"]
+    
+    # Fetch from WordPress
+    api_base = auth.get("api_base", WP_API_BASE)
+    user = auth.get("user", WP_USER)
+    password = auth.get("password", WP_APP_PASSWORD)
+    
     try:
-        r = requests.get(f"{WP_API_BASE}/categories", auth=auth, params={"per_page": 100}, timeout=30)
-        if r.status_code == 200:
-            for cat in r.json():
-                categories[cat["id"]] = {
-                    "name": cat["name"],
-                    "slug": cat.get("slug", ""),
-                    "parent": cat.get("parent", 0)
-                }
+        resp = requests.get(
+            f"{api_base}/wp/v2/categories",
+            auth=(user, password),
+            params={"per_page": 100}
+        )
+        if resp.status_code == 200:
+            categories = {cat["id"]: cat for cat in resp.json()}
             wp_cache["categories"] = categories
-            save_wp_cache()
-        else:
-            print(f"WP categories error: {r.status_code}")
-            categories = wp_cache.get("categories", {})
+            return categories
     except Exception as e:
-        print(f"Failed to fetch categories: {e}")
-        categories = wp_cache.get("categories", {})
+        print(f"Error fetching categories: {e}")
     
-    return categories
+    return {}
 
-def get_category_by_slug(slug: str, auth) -> Optional[int]:
-    categories = get_wp_categories(auth)
-    for cat_id, cat_data in categories.items():
-        if cat_data["slug"].lower() == slug.lower():
-            return cat_id
-    return None
 
-def get_category_by_name(name: str, auth) -> Optional[int]:
-    categories = get_wp_categories(auth)
-    for cat_id, cat_data in categories.items():
-        if cat_data["name"].lower() == name.lower():
-            return cat_id
-    return None
-
-def sync_wp_categories(config: Dict, auth):
-    structure = config.get("search", {}).get("structure", {})
-    brands = structure.get("Brands", {})
-    created = 0
+def get_wp_tags(auth) -> Dict[int, Dict]:
+    """
+    Fetch all WordPress tags.
     
-    for category_name in brands.keys():
-        slug = category_name.lower().replace(" & ", "-").replace(" ", "-")
-        brands_list = brands[category_name]
-        
-        existing_id = get_category_by_slug(slug, auth)
-        if existing_id:
-            print(f"Category exists: {category_name}")
-            continue
-        
-        try:
-            r = requests.post(f"{WP_API_BASE}/categories", auth=auth, json={
-                "name": category_name,
-                "description": f"News about {category_name} - Brands: {', '.join(brands_list[:5])}"
-            }, timeout=30)
-            if r.status_code in (200, 201):
-                print(f"Created category: {category_name}")
-                created += 1
-            else:
-                print(f"Failed to create {category_name}: {r.status_code}")
-        except Exception as e:
-            print(f"Error creating category {category_name}: {e}")
+    Args:
+        auth (dict): Authentication configuration
     
-    load_wp_cache()
-    return created
-
-def build_search_terms(config: Dict) -> List[str]:
-    search_terms = []
-    structure = config.get("search", {}).get("structure", {})
-    events = config.get("search", {}).get("events", [])
+    Returns:
+        dict: Tag ID -> tag data mapping
+    """
+    global wp_cache
     
-    for category, subcats in structure.items():
-        if isinstance(subcats, dict):
-            for subcat, terms in subcats.items():
-                if isinstance(terms, list):
-                    for term in terms:
-                        search_terms.append(term)
-                        if events:
-                            for event in events[:2]:
-                                search_terms.append(f"{term} {event}")
-                else:
-                    search_terms.append(str(terms))
-                    if events:
-                        search_terms.append(f"{subcats} {events[0]}")
-        else:
-            search_terms.append(str(subcats))
+    if "tags" in wp_cache:
+        return wp_cache["tags"]
     
-    return search_terms
-
-def get_author_for_category(category_name: str, authors: List[Dict]) -> Optional[Dict]:
-    category_lower = category_name.lower()
-    
-    for author in authors:
-        author_cats = [c.lower() for c in author.get("categories", [])]
-        if category_lower in author_cats:
-            return author
-    
-    return None
-
-def select_author(authors: List[Dict], category_name: str = "") -> Dict:
-    if not authors:
-        return {"user": WP_USER, "password": WP_APP_PASSWORD}
-    
-    if category_name:
-        cat_author = get_author_for_category(category_name, authors)
-        if cat_author:
-            return cat_author
-    
-    weights = [a.get("weight", 1) for a in authors]
-    total = sum(weights)
-    r = random.random() * total
-    cumsum = 0
-    for i, w in enumerate(weights):
-        cumsum += w
-        if r <= cumsum:
-            return authors[i]
-    
-    return authors[0]
-
-def update_dashboard(stats: Dict = None, running: bool = None, lastPost: str = None, lastError: str = None):
-    data = {}
-    if stats is not None:
-        data["stats"] = stats
-    if running is not None:
-        data["running"] = running
-    if lastPost:
-        data["lastPost"] = lastPost
-    if lastError:
-        data["lastError"] = lastError
+    api_base = auth.get("api_base", WP_API_BASE)
+    user = auth.get("user", WP_USER)
+    password = auth.get("password", WP_APP_PASSWORD)
     
     try:
-        requests.post(f"{DASHBOARD_URL}/api/update", json=data, timeout=5)
-    except:
-        pass
+        resp = requests.get(
+            f"{api_base}/wp/v2/tags",
+            auth=(user, password),
+            params={"per_page": 100}
+        )
+        if resp.status_code == 200:
+            tags = {tag["id"]: tag for tag in resp.json()}
+            wp_cache["tags"] = tags
+            return tags
+    except Exception as e:
+        print(f"Error fetching tags: {e}")
+    
+    return {}
+
 
 def search_brave(query: str, api_key: str, count: int = 10) -> List[Dict]:
-    url = "https://api.search.brave.com/res/v1/web/search"
-    headers = {
-        "Accept": "application/json",
-        "X-Subscription-Token": api_key,
-    }
-    params = {
-        "q": query,
-        "count": count,
-        "freshness": "pw",
-    }
+    """
+    Search Brave News API for articles matching query.
     
+    Uses Brave Search API to find news articles. Results include title,
+    description, URL, and published date.
+    
+    Args:
+        query (str): Search query string
+        api_key (str): Brave API key
+        count (int): Number of results to fetch (default: 10)
+    
+    Returns:
+        list: List of article dictionaries
+    """
     try:
-        r = requests.get(url, headers=headers, params=params, timeout=30)
-        if r.status_code != 200:
-            print(f"Brave API error {r.status_code}: {r.text[:200]}")
-            return []
-        data = r.json()
-        return data.get("web", {}).get("results", [])
+        # Brave Search API endpoint
+        url = "https://api.search.brave.com/res/v1/web/search"
+        headers = {
+            "X-Subscription-Token": api_key,
+            "Accept": "application/json"
+        }
+        params = {
+            "q": query,
+            "count": count,
+            "search_lang": "en"
+        }
+        
+        resp = requests.get(url, headers=headers, params=params, timeout=30)
+        
+        if resp.status_code == 200:
+            data = resp.json()
+            results = data.get("web", {}).get("results", [])
+            
+            articles = []
+            for item in results:
+                # Extract relevant fields from Brave response
+                article = {
+                    "title": item.get("title", ""),
+                    "description": item.get("description", ""),
+                    "url": item.get("url", ""),
+                    "published": item.get("age", ""),
+                    "domain": item.get("domain", "")
+                }
+                articles.append(article)
+            
+            return articles
+        
     except Exception as e:
-        print(f"Brave search failed: {e}")
-        return []
+        print(f"Brave API error for '{query}': {e}")
+    
+    return []
 
-def filter_relevant(results: List[Dict], config: Dict = None) -> List[Dict]:
-    relevant = []
-    
-    keywords = set()
-    if config:
-        structure = config.get("search", {}).get("structure", {})
-        for category, subcats in structure.items():
-            if isinstance(subcats, dict):
-                keywords.update([k.lower() for k in subcats.keys()])
-                for terms in subcats.values():
-                    if isinstance(terms, list):
-                        keywords.update([t.lower() for t in terms])
-            else:
-                keywords.add(str(subcats).lower())
-        
-        events = config.get("search", {}).get("events", [])
-    else:
-        keywords = {"dji", "insta360", "gopro", "sony", "canon", "rode", "blackmagic", "hp",
-                   "youtube", "tiktok", "instagram", "twitch", "mrbeast", "marques"}
-        events = ["arrest", "scandal", "lawsuit", "new release", "launch", "announcement"]
-    
-    for r in results:
-        title = r.get("title", "").lower()
-        desc = r.get("description", "").lower()
-        combined = title + " " + desc
-        
-        keyword_match = any(k in combined for k in keywords)
-        event_match = any(e in combined for e in events) if events else False
-        
-        if keyword_match or event_match:
-            relevant.append(r)
-    
-    return relevant
 
-def call_llama(prompt: str, system_prompt: str = "") -> Dict[str, Any]:
-    payload = {
-        "prompt": f"{system_prompt + ' ' if system_prompt else ''}{prompt}",
-        "stream": False,
-    }
+def generate_with_llm(prompt: str, base_url: str = None, model: str = None) -> str:
+    """
+    Generate text using local LLM (llama.cpp via OpenAI-compatible API).
+    
+    Sends a prompt to the local LLM server and returns the generated text.
+    Falls back gracefully if LLM is unavailable.
+    
+    Args:
+        prompt (str): Input prompt for the LLM
+        base_url (str, optional): Override LLM base URL
+        model (str, optional): Override model name
+    
+    Returns:
+        str: Generated text or empty string on failure
+    """
+    url = (base_url or LOCAL_LLM_BASE_URL) + "/v1/chat/completions"
+    model_name = model or LOCAL_LLM_MODEL
     
     try:
-        r = requests.post(f"{LOCAL_LLM_BASE_URL}/v1/completions", json=payload, timeout=120)
-        if r.status_code != 200:
-            return {"error": f"LLM error: {r.status_code}", "text": ""}
-        return r.json()
+        resp = requests.post(
+            url,
+            json={
+                "model": model_name,
+                "messages": [
+                    {"role": "system", "content": "You are a professional news writer."},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.7,
+                "max_tokens": 2000
+            },
+            timeout=120
+        )
+        
+        if resp.status_code == 200:
+            data = resp.json()
+            return data["choices"][0]["message"]["content"]
+    
     except Exception as e:
-        return {"error": str(e), "text": ""}
-
-def generate_wp_post(article: Dict) -> Dict[str, Any]:
-    title = article.get("title", "Untitled")
-    url = article.get("url", "")
-    desc = article.get("description", "")
+        print(f"LLM generation error: {e}")
     
-    system_prompt = """You are a news writer for Creator Newsdesk. Create a compelling news article.
-Rules:
-- Write in journalistic style
-- Include the source URL at the end
-- If no valid publish date is found, return {"publish": false}
-- If article is real news, return {"publish": true, "title": "...", "content": "...", "category": "...", "tags": ["tag1", "tag2"]}
+    return ""
 
-Categories: DJI, Insta360, GoPro, Røde, Sony, Tech, YouTube, TikTok, Business, Canon, Nikon, Blackmagic, HP
 
-Respond ONLY in JSON format."""
-
-    prompt = f"""Title: {title}
-Description: {desc}
-URL: {url}
-
-Create a news article or return {{"publish": false}} if this seems fake/unreliable."""
-
-    result = call_llama(prompt, system_prompt)
+def create_wp_post(auth: Dict, title: str, content: str, 
+                   categories: List[int] = None, tags: List[int] = None,
+                   status: str = "draft") -> Optional[int]:
+    """
+    Create a new WordPress post.
+    
+    Uses WP REST API to create a new post with the given title, content,
+    categories, and tags.
+    
+    Args:
+        auth (dict): WordPress authentication (api_base, user, password)
+        title (str): Post title
+        content (str): Post content (HTML)
+        categories (list): List of category IDs
+        tags (list): List of tag IDs
+        status (str): Post status ('draft' or 'publish')
+    
+    Returns:
+        int: Created post ID, or None on failure
+    """
+    api_base = auth.get("api_base", WP_API_BASE)
+    user = auth.get("user", WP_USER)
+    password = auth.get("password", WP_APP_PASSWORD)
     
     try:
-        text = result.get("text", "") or ""
-        if not text:
-            text = result.get("choices", [{}])[0].get("text", "") or result.get("choices", [{}])[0].get("message", {}).get("content", "") or ""
+        resp = requests.post(
+            f"{api_base}/wp/v2/posts",
+            auth=(user, password),
+            json={
+                "title": title,
+                "content": content,
+                "status": status,
+                "categories": categories or [],
+                "tags": tags or []
+            }
+        )
         
-        parsed = json.loads(text)
-        return parsed
-    except:
-        return {"publish": False, "error": "Failed to parse LLM response"}
-
-def wp_create_post(title: str, content: str, category_id: int, author_id: int, tags: List[str] = None, auth = None) -> Optional[int]:
-    url = f"{WP_API_BASE}/posts"
-    data = {
-        "title": title,
-        "content": content,
-        "status": PUBLISH_MODE,
-        "categories": [category_id],
-    }
-    if author_id:
-        data["author"] = author_id
-    if tags:
-        data["tags"] = tags
+        if resp.status_code in (200, 201):
+            return resp.json()["id"]
+        else:
+            print(f"WP create error: {resp.status_code} - {resp.text}")
     
-    try:
-        r = requests.post(url, auth=auth, json=data, timeout=60)
-        if r.status_code in (200, 201):
-            return r.json().get("id")
-        print(f"WP error: {r.status_code} - {r.text[:200]}")
     except Exception as e:
-        print(f"WP post failed: {e}")
+        print(f"WP API error: {e}")
+    
     return None
 
-def get_category_id(category_name: str, auth) -> int:
-    r = requests.get(f"{WP_API_BASE}/categories", auth=auth, params={"search": category_name}, timeout=30)
-    if r.status_code == 200:
-        cats = r.json()
-        if cats:
-            return cats[0]["id"]
-    
-    r = requests.get(f"{WP_API_BASE}/categories", auth=auth, params={"per_page": 100}, timeout=30)
-    if r.status_code == 200:
-        for c in r.json():
-            if c["name"].lower() == category_name.lower():
-                return c["id"]
-    
-    return 1
 
-def run():
-    print("=== Creator News Pipeline ===")
+def create_wp_category(auth: Dict, name: str, description: str = "") -> Optional[int]:
+    """
+    Create a new WordPress category.
     
+    Args:
+        auth (dict): WordPress authentication
+        name (str): Category name
+        description (str, optional): Category description
+    
+    Returns:
+        int: Created category ID or None
+    """
+    api_base = auth.get("api_base", WP_API_BASE)
+    user = auth.get("user", WP_USER)
+    password = auth.get("password", WP_APP_PASSWORD)
+    
+    try:
+        resp = requests.post(
+            f"{api_base}/wp/v2/categories",
+            auth=(user, password),
+            json={"name": name, "description": description}
+        )
+        
+        if resp.status_code in (200, 201):
+            return resp.json()["id"]
+    
+    except Exception as e:
+        print(f"Category creation error: {e}")
+    
+    return None
+
+
+def main():
+    """
+    Main pipeline execution function.
+    
+    Orchestrates the full news pipeline:
+    1. Load configuration and processed URLs
+    2. Build search queries from configured brands/platforms
+    3. Fetch articles from Brave API
+    4. Filter out already-processed URLs
+    5. Rewrite articles using LLM
+    6. Create WordPress posts
+    
+    Returns:
+        dict: Pipeline execution statistics
+    """
+    print("Starting Creator News Pipeline...")
+    
+    # Load configuration
     config = load_config()
+    
+    # Load caches
     load_wp_cache()
+    processed_urls = load_processed()
     
-    site = None
-    for s in config.get("sites", []):
-        if s.get("active", True):
-            site = s
-            break
+    stats = {
+        "fetched": 0,
+        "processed": 0,
+        "created": 0,
+        "skipped": 0,
+        "errors": 0
+    }
     
-    if not site:
-        print("No active site found in config")
-        return
+    # Get first configured site
+    sites = config.get("sites", [])
+    if not sites:
+        print("No sites configured in config.json")
+        return stats
     
-    global WP_API_BASE, WP_USER, WP_APP_PASSWORD, LOCAL_LLM_BASE_URL, LOCAL_LLM_MODEL
-    WP_API_BASE = site.get("wp", {}).get("api_base", WP_API_BASE)
-    authors = site.get("wp", {}).get("authors", [])
-    LOCAL_LLM_BASE_URL = site.get("llm", {}).get("base_url", LOCAL_LLM_BASE_URL)
-    LOCAL_LLM_MODEL = site.get("llm", {}).get("model", LOCAL_LLM_MODEL)
-    publish_mode = site.get("publish_mode", "draft")
+    site = sites[0]
+    auth = site.get("wp", {})
+    search_config = site.get("search", {})
+    structure = search_config.get("structure", {})
     
-    if not WP_API_BASE:
-        print("WP_API_BASE not configured")
-        return
+    # Build search terms from configured brands
+    search_queries = []
+    for category, brands in structure.items():
+        if isinstance(brands, dict):
+            for brand, terms in brands.items():
+                if isinstance(terms, list):
+                    for term in terms:
+                        search_queries.append(f"{brand} {term}")
+                else:
+                    search_queries.append(f"{brand} {brands}")
+        else:
+            search_queries.append(category)
     
-    stats = {"fetched": 0, "processed": 0, "created": 0, "skipped": 0}
-    update_dashboard(stats, running=True)
+    print(f"Built {len(search_queries)} search queries")
     
-    processed = load_processed()
+    # Get Brave API keys
+    brave_keys = site.get("brave_keys", [])
+    if not brave_keys:
+        brave_keys = [BRAVE_API_KEY]
     
-    if not authors:
-        author = {"user": WP_USER, "password": WP_APP_PASSWORD}
-    else:
-        author = select_author(authors, "")
-    
-    auth = (author.get("user", WP_USER), author.get("password", WP_APP_PASSWORD))
-    
-    print("Fetching categories from WordPress...")
-    categories = get_wp_categories(auth)
-    print(f"Found {len(categories)} categories")
-    
-    print("Building search terms from config...")
-    search_terms = build_search_terms(config)
-    print(f"Generated {len(search_terms)} search terms")
-    
-    api_keys = config.get("brave_keys", [])
-    if not api_keys:
-        api_keys = [BRAVE_API_KEY]
-    current_key_idx = 0
-    
-    all_results = []
-    
-    for query in search_terms:
-        if current_key_idx >= len(api_keys):
-            break
-            
+    # Process each search query
+    for i, query in enumerate(search_queries):
+        # Rotate through API keys to avoid rate limits
+        api_key = brave_keys[i % len(brave_keys)]
+        
         print(f"Searching: {query}")
-        results = search_brave(query, api_keys[current_key_idx])
+        articles = search_brave(query, api_key, count=10)
         
-        for r in results:
-            url = r.get("url", "")
-            if url and url not in processed:
-                all_results.append(r)
-                processed.add(url)
+        stats["fetched"] += len(articles)
         
-        current_key_idx += 1
-    
-    save_processed(processed)
-    print(f"Found {len(all_results)} new articles")
-    stats["fetched"] = len(all_results)
-    update_dashboard(stats)
-    
-    relevant = filter_relevant(all_results, config)
-    print(f"Relevant: {len(relevant)}")
-    
-    for article in relevant:
-        print(f"Processing: {article.get('title', '')[:50]}...")
-        stats["processed"] += 1
-        
-        result = generate_wp_post(article)
-        
-        if result.get("publish"):
-            cat_name = result.get("category", "Tech")
-            cat_id = get_category_by_name(cat_name, auth)
-            if not cat_id:
-                cat_id = get_category_by_slug(cat_name.lower().replace(" ", "-"), auth)
-            if not cat_id:
-                print(f"Category not found: {cat_name}, using default")
-                cat_id = 1
+        for article in articles:
+            url = article.get("url", "")
             
-            author_id = int(author.get("id", 0))
-            tags = result.get("tags", [])
+            # Skip already processed URLs
+            if url in processed_urls:
+                stats["skipped"] += 1
+                continue
             
-            post_id = wp_create_post(
-                result.get("title") or article.get("title") or "Untitled",
-                result.get("content") or article.get("description") or "",
-                cat_id,
-                author_id,
-                tags,
-                auth
+            # Mark as processed
+            processed_urls.add(url)
+            
+            # Rewrite article with LLM
+            prompt = f"""Rewrite this news article for a tech news website.
+Keep it informative but concise. Write in a professional style.
+
+Title: {article.get('title', '')}
+Source: {article.get('domain', '')}
+Description: {article.get('description', '')}
+
+Write a new article:"""
+            
+            generated_content = generate_with_llm(prompt)
+            
+            if not generated_content:
+                stats["errors"] += 1
+                continue
+            
+            # Create WordPress post
+            post_id = create_wp_post(
+                auth,
+                title=article.get("title", ""),
+                content=generated_content,
+                status=PUBLISH_MODE
             )
             
             if post_id:
-                print(f"Created post #{post_id}")
                 stats["created"] += 1
-                update_dashboard(stats, lastPost=result.get("title", ""))
+                print(f"Created post {post_id}: {article.get('title', '')[:50]}...")
             else:
-                print("Failed to create post")
-        else:
-            print(f"Skipped: {result.get('error', 'Not publishable')}")
-            stats["skipped"] += 1
+                stats["errors"] += 1
+            
+            stats["processed"] += 1
     
-    update_dashboard(stats, running=False)
-    print("=== Done ===")
+    # Save caches
+    save_wp_cache()
+    save_processed(processed_urls)
+    
+    print(f"\nPipeline complete:")
+    print(f"  Fetched: {stats['fetched']}")
+    print(f"  Processed: {stats['processed']}")
+    print(f"  Created: {stats['created']}")
+    print(f"  Skipped: {stats['skipped']}")
+    print(f"  Errors: {stats['errors']}")
+    
+    return stats
+
 
 if __name__ == "__main__":
-    run()
+    main()
