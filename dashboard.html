@@ -38,7 +38,7 @@
         }
         
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { font-size: 24px; }
+        html { font-size: 36px; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-primary);
@@ -62,18 +62,18 @@
             overflow: hidden;
         }
         .nav-rail.expanded { 
-            width: 285px; 
+            width: 210px; 
         }
         
         .nav-logo {
-            width: 74px;
-            height: 74px;
+            width: 80px;
+            height: 80px;
             border-radius: 14px;
             background: linear-gradient(135deg, #00d4ff20, #7b2cbf20);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px auto;
+            margin: 0 auto 25px auto;
             cursor: pointer;
             transition: all 0.3s;
         }
@@ -99,9 +99,9 @@
         .nav-items { flex: 1; display: flex; flex-direction: column; gap: 8px; }
         
         .nav-item {
-            width: 74px;
-            height: 74px;
-            border-radius: 14px;
+            width: 58px;
+            height: 58px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -109,15 +109,16 @@
             transition: all 0.2s;
             position: relative;
             color: #666;
-            font-size: 2.5rem;
+            font-size: 1.5rem;
             margin: 0 auto;
         }
         .nav-rail.expanded .nav-item {
-            width: 240px;
+            width: 200px;
             justify-content: flex-start;
-            padding-left: 20px;
-            gap: 16px;
-            margin: 0 0 6px 0;
+            padding-left: 14px;
+            gap: 12px;
+            margin: 0 0 4px 0;
+            height: 58px;
         }
         .nav-item:hover { 
             background: var(--nav-hover); 
@@ -158,7 +159,7 @@
         .nav-bottom { margin-top: auto; }
         
         .nav-toggle {
-            width: 56px;
+            width: 58px;
             height: 44px;
             border-radius: 12px;
             display: flex;
@@ -169,25 +170,31 @@
             font-size: 1rem;
             transition: all 0.2s;
             margin: 0 auto;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
         }
         .nav-rail.expanded .nav-toggle {
-            width: 204px;
+            width: 180px;
             justify-content: flex-start;
             padding-left: 16px;
-            margin: 0;
+            left: 20px;
+            transform: none;
+        }
         }
         .nav-toggle:hover { background: #1a1a24; color: #888; }
         
         .main-content {
             flex: 1;
             margin-left: 95px;
-            margin-top: 490px;
-            padding: 25px 40px 25px 160px;
+            margin-top: 260px;
+            padding: 20px 30px 20px 30px;
             transition: margin-left 0.3s ease;
             min-height: calc(100vh - 270px);
             z-index: 1;
         }
-        .nav-rail.expanded + .main-content { margin-left: 285px; }
+        .nav-rail.expanded + .main-content { margin-left: 210px; }
         
         .logo-header {
             position: fixed;
@@ -360,13 +367,14 @@
         }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         
-        .content { padding: 25px; }
+        .content { padding: 20px; margin-top: 260px; margin-left: 95px; }
         
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 15px;
             margin-bottom: 25px;
+            margin-left: 95px;
         }
         .stat-card {
             background: linear-gradient(135deg, #12121a 0%, #1a1a24 100%);
@@ -386,7 +394,8 @@
             border-radius: 14px;
             border: 1px solid #1a1a24;
             margin-bottom: 20px;
-            margin-left: 120px;
+            margin-left: 95px;
+            margin-top: 20px;
             overflow: hidden;
         }
         
@@ -563,6 +572,13 @@
         .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
         .hidden { display: none !important; }
+        
+        /* Page containers need top margin */
+        #page-brave, #page-ai, #page-platforms, #page-brands, #page-creators, #page-settings, #page-images, #page-generate {
+            margin-top: 260px;
+            margin-left: 50px;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -599,7 +615,7 @@
                 <span class="tooltip">ComfyUI, A1111, OpenClaw</span>
             </div>
             <div class="nav-item" data-page="brave" onclick="showPage('brave')" title="Brave Search" draggable="true">
-                <i class="fab fa-searchengin"></i>
+                <i class="fa-brands fa-brave"></i>
                 <span class="nav-label">Brave</span>
                 <span class="tooltip">Brave API search config</span>
             </div>
@@ -614,36 +630,7 @@
                 <span class="tooltip">API keys and configuration</span>
             </div>
         </div>
-        <div class="nav-item" data-page="brands" onclick="showPage('brands')" title="Manage Brand Categories">
-            <i class="fas fa-tags"></i>
-            <span class="nav-label">Brands</span>
-            <span class="tooltip">Manage brand categories and search terms</span>
-        </div>
-<div class="nav-item" data-page="ai" onclick="showPage('ai')" title="AI Chat">
-                <i class="fas fa-robot"></i>
-                <span class="nav-label">AI</span>
-                <span class="tooltip">Chat with AI directly</span>
-            </div>
-            <div class="nav-item" data-page="brave" onclick="showPage('brave')" title="Brave Search">
-                <i class="fab fa-searchengin"></i>
-                <span class="nav-label">Brave</span>
-                <span class="tooltip">Brave API search config</span>
-            </div>
-<div class="nav-item" data-page="images" onclick="showPage('images')" title="Generate OG Images">
-                <i class="fas fa-image"></i>
-                <span class="nav-label">OG Images</span>
-                <span class="tooltip">Generate Open Graph images</span>
-            </div>
-            <div class="nav-item" data-page="generate" onclick="showPage('generate')" title="Image Generation">
-                <i class="fas fa-magic"></i>
-                <span class="nav-label">Generate</span>
-                <span class="tooltip">ComfyUI, A1111, OpenClaw</span>
-            </div>
-        <div class="nav-item" data-page="settings" onclick="showPage('settings')" title="Configuration">
-            <i class="fas fa-cog"></i>
-            <span class="nav-label">Settings</span>
-            <span class="tooltip">API keys and configuration</span>
-        </div>
+    </div>
         
         <div class="nav-toggle" onclick="toggleNav()" title="Expand/Collapse Menu" style="margin-top:auto;">
             <i class="fas fa-bars"></i>
@@ -1136,14 +1123,28 @@
             const platforms = structure['Platform News'] || {};
             let html = '';
             
+            // Platform icon mapping
+            const platformIcons = {
+                'YouTube': 'fa-youtube',
+                'TikTok': 'fa-tiktok',
+                'Twitch': 'fa-twitch',
+                'Instagram': 'fa-instagram',
+                'Facebook': 'fa-facebook',
+                'Twitter': 'fa-twitter',
+                'X': 'fa-x-twitter'
+            };
+            
             for (let platform in platforms) {
                 const data = platforms[platform];
                 const terms = Array.isArray(data) ? data : (data.brands || []);
                 const desc = data.description || '';
                 
+                // Get icon for this platform
+                const iconClass = platformIcons[platform] || 'fa-globe';
+                
                 html += `<div class="brand-category">
                     <div class="brand-category-header">
-                        <span class="brand-category-name"><i class="fas fa-globe"></i> ${platform}</span>
+                        <span class="brand-category-name"><i class="fab ${iconClass}"></i> ${platform}</span>
                         <span class="brand-category-count">${terms.length} terms</span>
                     </div>
                     ${desc ? `<div class="brand-category-desc">${desc}</div>` : ''}
