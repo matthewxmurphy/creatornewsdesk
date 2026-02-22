@@ -116,8 +116,8 @@
             width: 200px;
             justify-content: flex-start;
             padding-left: 14px;
-            gap: 12px;
-            margin: 0 0 4px 0;
+            gap: 18px;
+            margin: 0 0 6px 0;
             height: 58px;
         }
         .nav-item:hover { 
@@ -167,20 +167,18 @@
             justify-content: center;
             cursor: pointer;
             color: #555;
-            font-size: 1rem;
+            font-size: 1.2rem;
             transition: all 0.2s;
-            margin: 0 auto;
-            position: absolute;
+            position: fixed;
             bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 18px;
+            z-index: 200;
         }
         .nav-rail.expanded .nav-toggle {
             width: 180px;
             justify-content: flex-start;
             padding-left: 16px;
-            left: 20px;
-            transform: none;
+            left: 18px;
         }
         }
         .nav-toggle:hover { background: #1a1a24; color: #888; }
@@ -576,7 +574,7 @@
         /* Page containers need top margin */
         #page-brave, #page-ai, #page-platforms, #page-brands, #page-creators, #page-settings, #page-images, #page-generate {
             margin-top: 260px;
-            margin-left: 50px;
+            margin-left: 0px;
             padding: 20px;
         }
     </style>
