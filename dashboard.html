@@ -7,12 +7,42 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* CSS Variables for Dark/Light Theme */
+        :root {
+            /* Dark theme (default) */
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a24;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888;
+            --border-color: #2a2a3a;
+            --accent-color: #00d4ff;
+            --accent-gradient: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            --nav-bg: linear-gradient(180deg, #0d0d15 0%, #08080c 100%);
+            --nav-hover: transparent;
+            --nav-active-bg: linear-gradient(135deg, #00d4ff20, #7b2cbf20);
+        }
+        
+        [data-theme="light"] {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e8e8e8;
+            --text-primary: #1a1a1a;
+            --text-secondary: #555;
+            --border-color: #ddd;
+            --accent-color: #0066cc;
+            --accent-gradient: linear-gradient(135deg, #0066cc, #004499);
+            --nav-bg: linear-gradient(180deg, #e0e0e0 0%, #d0d0d0 100%);
+            --nav-hover: transparent;
+            --nav-active-bg: linear-gradient(135deg, #0066cc20, #00449920);
+        }
+        
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { font-size: 24px; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0a0a0f;
-            color: #e0e0e0;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             font-size: 1rem;
@@ -20,8 +50,8 @@
         
         .nav-rail {
             width: 95px;
-            background: linear-gradient(180deg, #0d0d15 0%, #08080c 100%);
-            border-right: 1px solid #1a1a24;
+            background: var(--nav-bg);
+            border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             padding: 15px 8px;
@@ -90,13 +120,13 @@
             margin: 0 0 6px 0;
         }
         .nav-item:hover { 
-            background: #1a1a24; 
-            color: #aaa; 
+            background: var(--nav-hover); 
+            color: var(--accent-color); 
         }
         .nav-item.active { 
-            background: linear-gradient(135deg, #00d4ff20, #7b2cbf20); 
-            color: #00d4ff;
-            box-shadow: 0 0 20px #00d4ff20;
+            background: var(--nav-active-bg); 
+            color: var(--accent-color);
+            box-shadow: 0 0 20px var(--accent-color)40;
         }
         .nav-item .nav-label {
             display: none;
@@ -165,27 +195,37 @@
             left: 95px;
             right: 0;
             height: 250px;
-            background: linear-gradient(180deg, #0a0a0f 0%, #0a0a0f 60%, transparent 100%);
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-primary) 60%, transparent 100%);
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 60px;
+            justify-content: space-between;
+            gap: 40px;
             z-index: 101;
-            padding: 0 40px;
+            padding: 0 60px 0 120px;
         }
         .logo-header img {
             max-height: 200px;
             width: auto;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-left: auto;
         }
         
         .header-search {
             display: flex;
             align-items: center;
             gap: 15px;
-            background: #1a1a24;
+            background: var(--bg-secondary);
             padding: 15px 25px;
             border-radius: 30px;
-            border: 2px solid #2a2a3a;
+            border: 2px solid var(--border-color);
         }
         .header-search i {
             font-size: 1.5rem;
@@ -194,7 +234,7 @@
         .header-search input {
             background: transparent;
             border: none;
-            color: #ccc;
+            color: var(--text-primary);
             font-size: 1.3rem;
             width: 300px;
             outline: none;
@@ -204,10 +244,39 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            background: #1a1a24;
+            background: var(--bg-secondary);
             padding: 15px 25px;
             border-radius: 30px;
-            border: 2px solid #2a2a3a;
+            border: 2px solid var(--border-color);
+        }
+        .header-status .live-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #00ff88;
+            box-shadow: 0 0 10px #00ff88;
+        }
+        .header-status #statusText {
+            font-size: 1.3rem;
+            color: #888;
+        }
+        
+        /* Theme toggle button */
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+        .theme-toggle:hover {
+            background: var(--border-color);
         }
         .header-status .live-dot {
             width: 16px;
@@ -583,14 +652,19 @@
     
     <div class="logo-header">
             <img src="creatornewsdesk-logo-header-228.png" alt="Creator Newsdesk">
-            <div class="header-search">
-                <i class="fas fa-search" style="color:#555;"></i>
-                <input type="text" id="configSearch" placeholder="Search settings..." 
-                       oninput="doSearch(this.value)">
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;">
-                <span class="live-dot" id="liveDot"></span>
-                <span id="statusText" style="font-size:0.85rem;color:#888;">Idle</span>
+            <div class="header-right">
+                <div class="header-search">
+                    <i class="fas fa-search" style="color:#555;"></i>
+                    <input type="text" id="configSearch" placeholder="Search settings..." 
+                           oninput="doSearch(this.value)">
+                </div>
+                <div class="header-status">
+                    <span class="live-dot" id="liveDot"></span>
+                    <span id="statusText" style="font-size:0.85rem;color:#888;">Idle</span>
+                </div>
+                <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </div>
             </div>
         </div>
         
@@ -1086,6 +1160,32 @@
             navExpanded = !navExpanded;
             document.getElementById('navRail').classList.toggle('expanded', navExpanded);
         }
+        
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            const currentTheme = html.getAttribute('data-theme');
+            
+            if (currentTheme === 'light') {
+                html.setAttribute('data-theme', 'dark');
+                icon.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                html.setAttribute('data-theme', 'light');
+                icon.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+        
+        // Initialize theme on load
+        (function() {
+            const saved = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = saved || (prefersDark ? 'dark' : 'light');
+            
+            document.documentElement.setAttribute('data-theme', theme);
+            document.getElementById('themeIcon').className = theme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+        })();
         
         function showPage(page) {
             currentPage = page;
