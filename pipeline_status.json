@@ -1,0 +1,14 @@
+{
+  "running": false,
+  "started": null,
+  "completed": null,
+  "stats": {
+    "fetched": 0,
+    "processed": 0,
+    "created": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "lastPost": null,
+  "lastError": null
+}

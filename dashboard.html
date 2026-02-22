@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator News Network</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        .nav-rail {
+            width: 72px;
+            background: linear-gradient(180deg, #0d0d15 0%, #08080c 100%);
+            border-right: 1px solid #1a1a24;
+            display: flex;
+            flex-direction: column;
+            padding: 15px 8px;
+            transition: width 0.3s ease;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            overflow: hidden;
+        }
+        .nav-rail.expanded { 
+            width: 240px; 
+        }
+        
+        .nav-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #00d4ff20, #7b2cbf20);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .nav-rail.expanded .nav-logo {
+            width: 180px;
+            margin: 0 0 20px 0;
+            justify-content: flex-start;
+            padding-left: 15px;
+            gap: 12px;
+        }
+        .nav-logo img { width: 36px; height: 36px; border-radius: 8px; }
+        .nav-logo i { font-size: 1.4rem; color: #00d4ff; }
+        .nav-logo-text {
+            display: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-rail.expanded .nav-logo-text { display: block; }
+        
+        .nav-items { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        
+        .nav-item {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            color: #666;
+            font-size: 1.3rem;
+            margin: 0 auto;
+        }
+        .nav-rail.expanded .nav-item {
+            width: 204px;
+            justify-content: flex-start;
+            padding-left: 16px;
+            gap: 14px;
+            margin: 0 0 4px 0;
+        }
+        .nav-item:hover { 
+            background: #1a1a24; 
+            color: #aaa; 
+        }
+        .nav-item.active { 
+            background: linear-gradient(135deg, #00d4ff20, #7b2cbf20); 
+            color: #00d4ff;
+            box-shadow: 0 0 20px #00d4ff20;
+        }
+        .nav-item .nav-label {
+            display: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .nav-rail.expanded .nav-label { display: block; }
+        .nav-label { display: none; }
+        
+        .nav-item .tooltip {
+            position: absolute;
+            left: 66px;
+            background: #1a1a24;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            border: 1px solid #2a2a3a;
+            color: #ccc;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .nav-rail:not(.expanded) .nav-item:hover .tooltip { opacity: 1; }
+        
+        .nav-bottom { margin-top: auto; }
+        
+        .nav-toggle {
+            width: 56px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #555;
+            font-size: 1rem;
+            transition: all 0.2s;
+            margin: 0 auto;
+        }
+        .nav-rail.expanded .nav-toggle {
+            width: 204px;
+            justify-content: flex-start;
+            padding-left: 16px;
+            margin: 0;
+        }
+        .nav-toggle:hover { background: #1a1a24; color: #888; }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 72px;
+            margin-top: 70px;
+            padding: 25px 40px;
+            transition: margin-left 0.3s ease;
+            min-height: calc(100vh - 70px);
+            z-index: 1;
+        }
+        .nav-rail.expanded + .main-content { margin-left: 240px; }
+        
+        .logo-header {
+            position: fixed;
+            top: 0;
+            left: 72px;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(180deg, #0a0a0f 0%, #0a0a0f 80%, transparent 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 101;
+            padding: 0 20px 0 10px;
+        }
+        .logo-header img {
+            max-height: 40px;
+            width: auto;
+        }
+        
+        .header-search {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #12121a;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid #2a2a3a;
+        }
+        .header-search input {
+            background: transparent;
+            border: none;
+            color: #ccc;
+            font-size: 0.9rem;
+            width: 160px;
+            outline: none;
+        }
+        
+        .status-floating {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #12121a;
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid #2a2a3a;
+        }
+        
+        .nav-rail {
+            z-index: 1002;
+        }
+        
+        #configSearch::placeholder { color: #555; }
+        
+        .header {
+            background: linear-gradient(135deg, #0d0d15 0%, #1a1a2e 50%, #0d0d15 100%);
+            padding: 15px 30px;
+            border-bottom: 1px solid #2a2a4a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1 { 
+            font-size: 1.3rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .site-tabs { display: flex; gap: 8px; }
+        .site-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: #1a1a24;
+            border: 1px solid #2a2a3a;
+            color: #777;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .site-tab:hover { background: #2a2a3a; }
+        .site-tab.active { background: linear-gradient(135deg, #00d4ff20, #7b2cbf20); border-color: #00d4ff; color: #00d4ff; }
+        
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-running { background: #00d4ff20; color: #00d4ff; border: 1px solid #00d4ff40; }
+        .status-idle { background: #4a4a6a20; color: #666680; border: 1px solid #4a4a6a40; }
+        
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
+        .content { padding: 25px; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #12121a 0%, #1a1a24 100%);
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid #1a1a24;
+        }
+        .stat-label { color: #555; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 2rem; font-weight: 700; margin-top: 5px; }
+        .stat-value.blue { color: #00d4ff; }
+        .stat-value.purple { color: #7b2cbf; }
+        .stat-value.green { color: #00ff88; }
+        .stat-value.orange { color: #ff8800; }
+        
+        .panel {
+            background: #12121a;
+            border-radius: 14px;
+            border: 1px solid #1a1a24;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #1a1a24;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .panel-title { font-weight: 600; font-size: 0.9rem; }
+        .panel-body { padding: 20px; }
+        
+        .brand-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        
+        .brand-category {
+            background: #0a0a0f;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #1a1a24;
+            cursor: grab;
+            transition: all 0.2s;
+        }
+        .brand-category:hover { border-color: #2a2a3a; }
+        .brand-category.dragging { opacity: 0.5; border-color: #00d4ff; }
+        .brand-category.drag-over { border-color: #00ff88; background: #00ff8810; }
+        
+        .brand-category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            cursor: grab;
+        }
+        .brand-category-name { 
+            font-weight: 600; 
+            font-size: 0.9rem; 
+            color: #00d4ff;
+        }
+        .brand-category-count {
+            background: #1a1a24;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            color: #666;
+        }
+        
+        .brand-category-desc {
+            font-size: 0.75rem;
+            color: #555;
+            margin-bottom: 12px;
+        }
+        
+        .brand-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .brand-tag {
+            background: #15151f;
+            border: 1px solid #252530;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            color: #888;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .brand-tag .remove {
+            cursor: pointer;
+            color: #555;
+            font-size: 0.8rem;
+        }
+        .brand-tag .remove:hover { color: #ff4444; }
+        
+        .add-brand-btn {
+            background: #15151f;
+            border: 1px dashed #2a2a3a;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .add-brand-btn:hover { border-color: #00d4ff; color: #00d4ff; }
+        
+        .controls { display: flex; gap: 10px; }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: linear-gradient(135deg, #00d4ff, #7b2cbf); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px #00d4ff40; }
+        .btn-secondary { background: #1a1a24; color: #777; border: 1px solid #2a2a3a; }
+        .btn-secondary:hover { background: #2a2a34; }
+        
+        .activity-feed { max-height: 280px; overflow-y: auto; }
+        .activity-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #1a1a24;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        .icon-search { background: #00d4ff15; }
+        .icon-llm { background: #7b2cbf15; }
+        .icon-post { background: #00ff8815; }
+        .icon-skip { background: #ff880015; }
+        .activity-content { flex: 1; }
+        .activity-title { font-size: 0.8rem; }
+        .activity-meta { font-size: 0.7rem; color: #555; }
+        
+        .log-viewer {
+            background: #08080c;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.7rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .log-entry { margin-bottom: 6px; }
+        .log-time { color: #444; }
+        .log-info { color: #00d4ff; }
+        .log-success { color: #00ff88; }
+        .log-warn { color: #ff8800; }
+        
+        .sidebar-stats {
+            padding: 20px;
+            border-right: 1px solid #1a1a24;
+            width: 240px;
+        }
+        
+        .quick-stat {
+            background: #12121a;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+        .quick-stat-label { color: #555; font-size: 0.7rem; text-transform: uppercase; }
+        .quick-stat-value { font-size: 1.1rem; font-weight: 600; margin-top: 4px; }
+        
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="nav-rail" id="navRail">
+<div class="nav-items" id="navItems" style="cursor:grab;">
+            <div class="nav-item" data-page="dashboard" onclick="showPage('dashboard')" title="Dashboard - Overview and stats" draggable="true">
+                <i class="fas fa-chart-line"></i>
+                <span class="nav-label">Dashboard</span>
+                <span class="tooltip">Overview and statistics</span>
+            </div>
+            <div class="nav-item" data-page="brands" onclick="showPage('brands')" title="Manage Brand Categories" draggable="true">
+                <i class="fas fa-tags"></i>
+                <span class="nav-label">Brands</span>
+                <span class="tooltip">Manage brand categories and search terms</span>
+            </div>
+            <div class="nav-item" data-page="creators" onclick="showPage('creators')" title="Track Creators" draggable="true">
+                <i class="fas fa-users"></i>
+                <span class="nav-label">Creators</span>
+                <span class="tooltip">Track YouTube, TikTok, Twitch creators</span>
+            </div>
+            <div class="nav-item" data-page="platforms" onclick="showPage('platforms')" title="Platform News" draggable="true">
+                <i class="fas fa-store"></i>
+                <span class="nav-label">Platforms</span>
+                <span class="tooltip">YouTube, TikTok, Instagram, Twitch</span>
+            </div>
+            <div class="nav-item" data-page="images" onclick="showPage('images')" title="Generate OG Images" draggable="true">
+                <i class="fas fa-image"></i>
+                <span class="nav-label">OG Images</span>
+                <span class="tooltip">Generate Open Graph images</span>
+            </div>
+            <div class="nav-item" data-page="generate" onclick="showPage('generate')" title="Image Generation" draggable="true">
+                <i class="fas fa-magic"></i>
+                <span class="nav-label">Generate</span>
+                <span class="tooltip">ComfyUI, A1111, OpenClaw</span>
+            </div>
+            <div class="nav-item" data-page="brave" onclick="showPage('brave')" title="Brave Search" draggable="true">
+                <i class="fab fa-searchengin"></i>
+                <span class="nav-label">Brave</span>
+                <span class="tooltip">Brave API search config</span>
+            </div>
+            <div class="nav-item" data-page="ai" onclick="showPage('ai')" title="AI Chat" draggable="true">
+                <i class="fas fa-robot"></i>
+                <span class="nav-label">AI</span>
+                <span class="tooltip">Chat with AI directly</span>
+            </div>
+            <div class="nav-item" data-page="settings" onclick="showPage('settings')" title="Configuration" draggable="true">
+                <i class="fas fa-cog"></i>
+                <span class="nav-label">Settings</span>
+                <span class="tooltip">API keys and configuration</span>
+            </div>
+        </div>
+        <div class="nav-item" data-page="brands" onclick="showPage('brands')" title="Manage Brand Categories">
+            <i class="fas fa-tags"></i>
+            <span class="nav-label">Brands</span>
+            <span class="tooltip">Manage brand categories and search terms</span>
+        </div>
+<div class="nav-item" data-page="ai" onclick="showPage('ai')" title="AI Chat">
+                <i class="fas fa-robot"></i>
+                <span class="nav-label">AI</span>
+                <span class="tooltip">Chat with AI directly</span>
+            </div>
+            <div class="nav-item" data-page="brave" onclick="showPage('brave')" title="Brave Search">
+                <i class="fab fa-searchengin"></i>
+                <span class="nav-label">Brave</span>
+                <span class="tooltip">Brave API search config</span>
+            </div>
+<div class="nav-item" data-page="images" onclick="showPage('images')" title="Generate OG Images">
+                <i class="fas fa-image"></i>
+                <span class="nav-label">OG Images</span>
+                <span class="tooltip">Generate Open Graph images</span>
+            </div>
+            <div class="nav-item" data-page="generate" onclick="showPage('generate')" title="Image Generation">
+                <i class="fas fa-magic"></i>
+                <span class="nav-label">Generate</span>
+                <span class="tooltip">ComfyUI, A1111, OpenClaw</span>
+            </div>
+        <div class="nav-item" data-page="settings" onclick="showPage('settings')" title="Configuration">
+            <i class="fas fa-cog"></i>
+            <span class="nav-label">Settings</span>
+            <span class="tooltip">API keys and configuration</span>
+        </div>
+        
+        <div class="nav-toggle" onclick="toggleNav()" title="Expand/Collapse Menu" style="margin-top:auto;">
+            <i class="fas fa-bars"></i>
+        </div>
+    </div>
+    
+    <div class="logo-header">
+            <img src="creatornewsdesk-logo-header-228.png" alt="Creator Newsdesk">
+            <div class="header-search">
+                <i class="fas fa-search" style="color:#555;"></i>
+                <input type="text" id="configSearch" placeholder="Search settings..." 
+                       oninput="doSearch(this.value)">
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span class="live-dot" id="liveDot"></span>
+                <span id="statusText" style="font-size:0.85rem;color:#888;">Idle</span>
+            </div>
+        </div>
+        
+        <!-- Search Results Popup -->
+        <div id="searchResults" style="display:none;position:fixed;top:55px;right:20px;width:350px;max-height:400px;overflow-y:auto;background:#1a1a24;border:1px solid #2a2a3a;border-radius:12px;z-index:1000;padding:15px;">
+        </div>
+        
+        <div class="content">
+            <!-- Dashboard Page -->
+            <div id="page-dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Articles Found</div>
+                        <div class="stat-value blue" id="statFetched">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Processed</div>
+                        <div class="stat-value purple" id="statProcessed">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Posts Created</div>
+                        <div class="stat-value green" id="statCreated">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Skipped</div>
+                        <div class="stat-value orange" id="statSkipped">0</div>
+                    </div>
+                </div>
+                
+                <div class="two-col">
+                    <div class="panel">
+<div class="panel-header">
+            <div class="panel-title"><i class="fas fa-users"></i> Creator Tracking</div>
+        </div>
+        <div class="panel-body">
+            <div class="brand-grid" id="creatorGrid"></div>
+        </div>
+    </div>
+    
+    <!-- Platforms Page -->
+    <div id="page-platforms" class="hidden">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-store"></i> Platform News</div>
+            </div>
+            <div class="panel-body">
+                <div class="brand-grid" id="platformGrid"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Brave Page -->
+    <div id="page-brave" class="hidden">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fab fa-searchengin"></i> Brave Search API Keys</div>
+            </div>
+            <div class="panel-body">
+                <p style="color:#666;font-size:0.8rem;margin-bottom:15px;">Add multiple Brave API keys. Each key allows ~2000 searches/month free.</p>
+                <div style="margin-bottom:15px;">
+                    <textarea class="form-input" id="braveKeysInput" rows="6" placeholder="Paste Brave API keys, one per line..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="saveApiKeys()"><i class="fas fa-save"></i> Save Keys</button>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-history"></i> Recent Searches</div>
+            </div>
+            <div class="panel-body">
+                <div id="braveUsage" style="color:#666;">No usage data yet</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Page -->
+    <div id="page-ai" class="hidden">
+        <div style="display:grid;grid-template-columns:1fr 300px;gap:20px;">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><i class="fas fa-robot"></i> AI Chat</div>
+                </div>
+                <div class="panel-body" style="height:400px;display:flex;flex-direction:column;">
+                    <div id="aiChat" style="flex:1;overflow-y:auto;padding:10px;background:#0a0a0f;border-radius:8px;margin-bottom:15px;">
+                        <div style="color:#00d4ff;margin-bottom:10px;">AI Assistant ready. Ask me anything!</div>
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <input type="text" class="form-input" id="aiPrompt" placeholder="Ask AI..." onkeypress="if(event.key==='Enter')sendAiMessage()">
+                        <button class="btn btn-primary" onclick="sendAiMessage()"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fas fa-cogs"></i> AI Settings</div>
+                    </div>
+                    <div class="panel-body">
+                        <p style="color:#666;font-size:0.75rem;margin-bottom:15px;">Fallback chain - if one fails, tries next:</p>
+                        <div id="aiProviders"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+                        <div class="panel-body">
+                            <canvas id="pipelineChart" height="200"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title"><i class="fas fa-chart-pie"></i> Success Rate</div>
+                        </div>
+                        <div class="panel-body">
+                            <canvas id="successChart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fas fa-stream"></i> Live Activity</div>
+                        <div class="controls">
+                            <button class="btn btn-primary" onclick="runPipeline()" title="Start the news fetching pipeline"><i class="fas fa-play"></i> Run</button>
+                            <button class="btn btn-secondary" onclick="fetchArticles()" title="Fetch 50 articles from Feb 1, 2025"><i class="fas fa-search"></i> Fetch 50</button>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="activity-feed" id="activityFeed">
+                            <div class="activity-item">
+                                <div class="activity-icon icon-search"><i class="fas fa-search"></i></div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Ready</div>
+                                    <div class="activity-meta">Click to start</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">📋 Log</div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="log-viewer" id="logViewer">
+                                <div class="log-entry"><span class="log-time">[--:--:--]</span> <span class="log-info">Ready</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Brands Page -->
+            <div id="page-brands" class="hidden">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">🏷️ Brand Categories (Drag to Reorder)</div>
+                        <div class="controls">
+                            <button class="btn btn-primary" onclick="saveConfig()">💾 Save</button>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="brand-grid" id="brandGrid"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Creators Page -->
+            <div id="page-creators" class="hidden">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">🎬 Creator Tracking</div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="brand-grid" id="creatorGrid"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Page -->
+            <div id="page-settings" class="hidden">
+                <div class="two-col">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">🔑 API Keys</div>
+                        </div>
+                        <div class="panel-body">
+                            <div style="margin-bottom:15px;">
+                                <div style="font-size:0.75rem;color:#555;margin-bottom:6px;">BRAVE API KEYS (one per line)</div>
+                                <textarea class="form-input" id="braveKeysInput" rows="4" style="width:100%;background:#0a0a0f;border:1px solid #2a2a3a;border-radius:8px;padding:12px;color:#e0e0e0;font-size:0.85rem;"></textarea>
+                            </div>
+                            <button class="btn btn-primary" onclick="saveApiKeys()">Save Keys</button>
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title"><i class="fas fa-robot"></i> AI Fallback Chain</div>
+                        </div>
+                        <div class="panel-body">
+                            <p style="color:#666;font-size:0.8rem;margin-bottom:15px;">If one AI fails, it will try the next enabled provider in order.</p>
+                            
+                            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:15px;">
+                                <div style="background:#0a0a0f;padding:15px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;">
+                                    <div><i class="fas fa-server" style="color:#00d4ff;"></i> Local (llama.cpp)</div>
+                                    <input type="checkbox" id="aiLocal" checked>
+                                </div>
+                                <div style="background:#0a0a0f;padding:15px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;">
+                                    <div><i class="fas fa-brain" style="color:#7b2cbf;"></i> xAI (Grok)</div>
+                                    <input type="checkbox" id="aiXai">
+                                </div>
+                                <div style="background:#0a0a0f;padding:15px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;">
+                                    <div><i class="fas fa-cube" style="color:#00ff88;"></i> OpenAI</div>
+                                    <input type="checkbox" id="aiOpenai">
+                                </div>
+                                <div style="background:#0a0a0f;padding:15px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;">
+                                    <div><i class="fas fa-microchip" style="color:#ff8800;"></i> MiniMax</div>
+                                    <input type="checkbox" id="aiMinimax">
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom:15px;">
+                                <div style="font-size:0.75rem;color:#555;margin-bottom:6px;">xAI API Key</div>
+                                <input type="password" class="form-input" id="xaiKey" placeholder="xAI API Key">
+                            </div>
+                            <div style="margin-bottom:15px;">
+                                <div style="font-size:0.75rem;color:#555;margin-bottom:6px;">OpenAI API Key</div>
+                                <input type="password" class="form-input" id="openaiKey" placeholder="OpenAI API Key">
+                            </div>
+                            <div style="margin-bottom:15px;">
+                                <div style="font-size:0.75rem;color:#555;margin-bottom:6px;">MiniMax API Key</div>
+                                <input type="password" class="form-input" id="minimaxKey" placeholder="MiniMax API Key">
+                            </div>
+                            <button class="btn btn-primary" onclick="saveAiSettings()">Save AI Settings</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Images/OG Page -->
+    <div id="page-images" class="hidden">
+        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="stat-card">
+                <div class="stat-label">Total Posts</div>
+                <div class="stat-value blue" id="imgTotal">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">With OG Image</div>
+                <div class="stat-value green" id="imgWith">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Need OG</div>
+                <div class="stat-value orange" id="imgNeed">0</div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-image"></i> Posts Needing Featured Images (Oldest First)</div>
+                <div class="controls">
+                    <select id="imgMethod" style="background:#1a1a24;color:#ccc;padding:8px 12px;border-radius:8px;border:1px solid #2a2a3a;">
+                        <option value="openclaw">OpenClaw</option>
+                        <option value="xai">xAI</option>
+                        <option value="comfyui">ComfyUI</option>
+                        <option value="a1111">A1111</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="generateImages('featured')"><i class="fas fa-rocket"></i> Generate</button>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div id="postsNeedImages"></div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-share-alt"></i> Posts Needing OG Images</div>
+                <div class="controls">
+                    <button class="btn btn-secondary" onclick="generateImages('og')"><i class="fas fa-rocket"></i> Generate OG</button>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div id="postsNeedOg"></div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-tags"></i> Posts Needing Tags</div>
+                <div class="controls">
+                    <button class="btn btn-secondary" onclick="analyzeTags()"><i class="fas fa-magic"></i> AI Analyze & Add Tags</button>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div id="postsNeedTags"></div>
+            </div>
+        </div>
+    </div>
+    </div>
+    
+    <!-- Generate Page (ComfyUI, A1111, OpenClaw) -->
+    <div id="page-generate" class="hidden">
+        <div class="two-col">
+            <div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fas fa-magic"></i> Image Generation</div>
+                    </div>
+                    <div class="panel-body">
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+                            <div class="provider-card" onclick="selectProvider('comfyui')" id="provComfyUI" style="background:#0a0a0f;padding:20px;border-radius:12px;text-align:center;cursor:pointer;border:2px solid transparent;">
+                                <i class="fas fa-robot" style="font-size:2rem;color:#00d4ff;"></i>
+                                <div style="margin-top:10px;font-weight:600;">ComfyUI</div>
+                                <div style="font-size:0.7rem;color:#555;">Local</div>
+                            </div>
+                            <div class="provider-card" onclick="selectProvider('a1111')" id="provA1111" style="background:#0a0a0f;padding:20px;border-radius:12px;text-align:center;cursor:pointer;border:2px solid transparent;">
+                                <i class="fas fa-wand-magic-sparkles" style="font-size:2rem;color:#7b2cbf;"></i>
+                                <div style="margin-top:10px;font-weight:600;">A1111</div>
+                                <div style="font-size:0.7rem;color:#555;">Local</div>
+                            </div>
+                            <div class="provider-card" onclick="selectProvider('openclaw')" id="provOpenClaw" style="background:#0a0a0f;padding:20px;border-radius:12px;text-align:center;cursor:pointer;border:2px solid transparent;">
+                                <i class="fas fa-cloud" style="font-size:2rem;color:#00ff88;"></i>
+                                <div style="margin-top:10px;font-weight:600;">OpenClaw</div>
+                                <div style="font-size:0.7rem;color:#555;">Cloud</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom:15px;">
+                            <div style="font-size:0.75rem;color:#555;margin-bottom:6px;">PROMPT</div>
+                            <textarea class="form-input" id="genPrompt" rows="4" placeholder="Describe the image you want..."></textarea>
+                        </div>
+                        
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">
+                            <div>
+                                <div style="font-size:0.75rem;color:#555;margin-bottom:6px;">WIDTH</div>
+                                <input type="number" class="form-input" id="genWidth" value="1024">
+                            </div>
+                            <div>
+                                <div style="font-size:0.75rem;color:#555;margin-bottom:6px;">HEIGHT</div>
+                                <input type="number" class="form-input" id="genHeight" value="1024">
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="generateImage()" style="width:100%;">
+                            <i class="fas fa-rocket"></i> Generate Image
+                        </button>
+                        
+                        <div id="genResult" style="margin-top:15px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fas fa-cog"></i> Generator Settings</div>
+                    </div>
+                    <div class="panel-body">
+                        <div style="margin-bottom:15px;">
+                            <div style="font-size:0.75rem;color:#555;margin-bottom:6px;">ComfyUI URL</div>
+                            <input type="text" class="form-input" id="comfyuiUrl" value="http://localhost:8188" placeholder="http://localhost:8188">
+                        </div>
+                        <div style="margin-bottom:15px;">
+                            <div style="font-size:0.75rem;color:#555;margin-bottom:6px;">A1111 URL</div>
+                            <input type="text" class="form-input" id="a1111Url" value="http://localhost:7860" placeholder="http://localhost:7860">
+                        </div>
+                        <div style="margin-bottom:15px;">
+                            <div style="font-size:0.75rem;color:#555;margin-bottom:6px;">OpenClaw URL</div>
+                            <input type="text" class="form-input" id="openclawUrl" value="http://localhost:8050" placeholder="http://localhost:8050">
+                        </div>
+                        <button class="btn btn-secondary" onclick="saveGeneratorSettings()" style="width:100%;">Save Settings</button>
+                    </div>
+                </div>
+                
+                <div class="panel" style="margin-top:20px;">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fas fa-robot"></i> OpenClaw Agent (macOS)</div>
+                    </div>
+                    <div class="panel-body">
+                        <p style="color:#666;font-size:0.8rem;margin-bottom:15px;">
+                            Download and run this agent on your Mac to handle image generation tasks locally.
+                            It will poll the dashboard for work and use xAI when configured.
+                        </p>
+                        <button class="btn btn-primary" onclick="downloadOpenClawAgent()" style="width:100%;">
+                            <i class="fas fa-download"></i> Download Agent Script
+                        </button>
+                        <div id="agentStatus" style="margin-top:10px;font-size:0.8rem;"></div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+    
+    <style>
+        .form-input { width: 100%; padding: 12px 15px; background: #0a0a0f; border: 1px solid #2a2a3a; border-radius: 8px; color: #e0e0e0; font-size: 0.9rem; }
+        .form-input:focus { outline: none; border-color: #00d4ff; }
+    </style>
+
+    <script>
+        let config = { sites: [], brave_keys: [], global_settings: {}, wp_admin_token: '' };
+        let currentSiteId = null;
+        let stats = { fetched: 0, processed: 0, created: 0, skipped: 0 };
+        let currentPage = 'dashboard';
+        let navExpanded = false;
+        
+        async function loadConfig() {
+            try {
+                const resp = await fetch('config.json?t=' + Date.now());
+                config = await resp.json();
+                console.log('Config loaded:', config);
+            } catch(e) {
+                console.error('Config load error:', e);
+                config = { sites: [], brave_keys: [], wp_admin_token: '' };
+            }
+            if (config.sites.length > 0) {
+                currentSiteId = config.sites[0].id;
+            }
+            renderBrandGrid();
+            renderCreators();
+            renderPlatforms();
+            
+            // Load Brave keys
+            const braveInput = document.getElementById('braveKeysInput');
+            if (braveInput) {
+                braveInput.value = (config.brave_keys || []).join('\n');
+            }
+        }
+        
+        function renderCreators() {
+            const site = config.sites.find(s => s.id === currentSiteId);
+            if (!site) return;
+            
+            const structure = site.search?.structure || {};
+            const creators = structure['Creators'] || {};
+            let html = '';
+            
+            for (let platform in creators) {
+                const data = creators[platform];
+                const creatorList = Array.isArray(data) ? data : (data.brands || []);
+                const desc = data.description || '';
+                
+                html += `<div class="brand-category">
+                    <div class="brand-category-header">
+                        <span class="brand-category-name"><i class="fab fa-${platform.toLowerCase().replace(' ', '-')}"></i> ${platform}</span>
+                        <span class="brand-category-count">${creatorList.length}</span>
+                    </div>
+                    ${desc ? `<div class="brand-category-desc">${desc}</div>` : ''}
+                    <div class="brand-tags">
+                        ${creatorList.slice(0, 10).map(c => `<span class="brand-tag">${c}</span>`).join('')}
+                    </div>
+                </div>`;
+            }
+            
+            document.getElementById('creatorGrid').innerHTML = html || '<div style="color:#666;">No creators configured</div>';
+        }
+        
+        function renderPlatforms() {
+            const site = config.sites.find(s => s.id === currentSiteId);
+            if (!site) return;
+            
+            const structure = site.search?.structure || {};
+            const platforms = structure['Platform News'] || {};
+            let html = '';
+            
+            for (let platform in platforms) {
+                const data = platforms[platform];
+                const terms = Array.isArray(data) ? data : (data.brands || []);
+                const desc = data.description || '';
+                
+                html += `<div class="brand-category">
+                    <div class="brand-category-header">
+                        <span class="brand-category-name"><i class="fas fa-globe"></i> ${platform}</span>
+                        <span class="brand-category-count">${terms.length} terms</span>
+                    </div>
+                    ${desc ? `<div class="brand-category-desc">${desc}</div>` : ''}
+                    <div class="brand-tags">
+                        ${terms.slice(0, 8).map(t => `<span class="brand-tag">${t}</span>`).join('')}
+                    </div>
+                </div>`;
+            }
+            
+            document.getElementById('platformGrid').innerHTML = html || '<div style="color:#666;">No platforms configured</div>';
+        }
+        
+        function toggleNav() {
+            navExpanded = !navExpanded;
+            document.getElementById('navRail').classList.toggle('expanded', navExpanded);
+        }
+        
+        function showPage(page) {
+            currentPage = page;
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+            document.querySelectorAll('#page-dashboard, #page-brands, #page-creators, #page-platforms, #page-brave, #page-ai, #page-generate, #page-settings, #page-images').forEach(el => el.classList.add('hidden'));
+            document.getElementById('page-' + page).classList.remove('hidden');
+            
+            if (page === 'images') {
+                loadImageStats();
+                loadPostsNeedImages();
+                loadPostsNeedOg();
+                loadPostsNeedTags();
+            }
+        }
+        
+        function renderBrandGrid() {
+            const site = config.sites.find(s => s.id === currentSiteId);
+            if (!site) return;
+            
+            const structure = site.search?.structure || {};
+            let html = '';
+            
+            for (let section in structure) {
+                const sectionData = structure[section];
+                
+                // Check if it's nested (like "Drones & Action Cameras": { "DJI": {...}, "GoPro": {...} })
+                if (typeof sectionData === 'object' && !Array.isArray(sectionData)) {
+                    let allBrands = [];
+                    let description = '';
+                    
+                    // It's a section with sub-categories
+                    for (let subcat in sectionData) {
+                        const subcatData = sectionData[subcat];
+                        if (Array.isArray(subcatData)) {
+                            allBrands = allBrands.concat(subcatData);
+                            description = subcatData.description || '';
+                        } else if (subcatData && subcatData.brands) {
+                            allBrands = allBrands.concat(subcatData.brands);
+                            description = subcatData.description || '';
+                        }
+                    }
+                    
+                    html += `<div class="brand-category" draggable="true" data-category="${section}">
+                        <div class="brand-category-header">
+                            <span class="brand-category-name">${section}</span>
+                            <span class="brand-category-count">${allBrands.length} brands</span>
+                        </div>
+                        <div class="brand-category-desc">${description}</div>
+                        <div class="brand-tags">
+                            ${allBrands.slice(0, 12).map(b => `<span class="brand-tag">${b}</span>`).join('')}
+                            ${allBrands.length > 12 ? `<span class="brand-tag">+${allBrands.length - 12}</span>` : ''}
+                        </div>
+                    </div>`;
+                }
+            }
+            
+            html += '<div class="add-brand-btn" onclick="addNewCategory()">+ Add Category</div>';
+            document.getElementById('brandGrid').innerHTML = html || '<div style="color:#666;padding:20px;">No brand categories configured</div>';
+            
+            initDragDrop();
+        }
+        
+        function initDragDrop() {
+            const items = document.querySelectorAll('.brand-category[draggable="true"]');
+            items.forEach(item => {
+                item.addEventListener('dragstart', e => {
+                    e.dataTransfer.setData('text/plain', item.dataset.category);
+                    item.classList.add('dragging');
+                });
+                item.addEventListener('dragend', () => item.classList.remove('dragging'));
+                item.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    item.classList.add('drag-over');
+                });
+                item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+                item.addEventListener('drop', e => {
+                    e.preventDefault();
+                    item.classList.remove('drag-over');
+                    const draggedCategory = e.dataTransfer.getData('text/plain');
+                    if (draggedCategory !== item.dataset.category) {
+                        reorderCategories(draggedCategory, item.dataset.category);
+                    }
+                });
+            });
+        }
+        
+        function reorderCategories(from, to) {
+            const site = config.sites.find(s => s.id === currentSiteId);
+            if (!site || !site.search?.structure) return;
+            
+            const structure = site.search.structure;
+            const temp = { [from]: structure[from] };
+            delete structure[from];
+            
+            const keys = Object.keys(structure);
+            const insertIdx = keys.indexOf(to);
+            keys.splice(insertIdx, 0, from);
+            
+            const newStructure = {};
+            keys.forEach(k => {
+                if (k === from) newStructure[from] = temp[from];
+                else if (structure[k]) newStructure[k] = structure[k];
+            });
+            
+            site.search.structure = newStructure;
+            renderBrandGrid();
+            addLog('Category reordered', 'info');
+        }
+        
+        function addNewCategory() {
+            const name = prompt('Category name:');
+            if (!name) return;
+            const site = config.sites.find(s => s.id === currentSiteId);
+            if (!site) return;
+            if (!site.search) site.search = {};
+            if (!site.search.structure) site.search.structure = {};
+            site.search.structure[name] = { brands: [], description: '' };
+            renderBrandGrid();
+        }
+        
+        async function saveConfig() {
+            await fetch('/api/save-config', {
+                method: 'POST',
+                body: JSON.stringify(config)
+            });
+            addLog('Configuration saved', 'success');
+        }
+        
+        async function saveApiKeys() {
+            const keys = document.getElementById('braveKeysInput').value.split('\n').map(k => k.trim()).filter(k => k);
+            config.brave_keys = keys;
+            await saveConfig();
+            addLog(`Saved ${keys.length} API keys`, 'success');
+        }
+        
+        async function saveAiSettings() {
+            const provider = document.getElementById('aiProvider').value;
+            const site = config.sites.find(s => s.id === currentSiteId);
+            if (site) {
+                if (!site.llm) site.llm = {};
+                site.llm.provider = provider;
+            }
+            await saveConfig();
+            addLog('AI provider updated', 'success');
+        }
+        
+        // Search functionality
+        function doSearch(query) {
+            const results = searchConfig(query);
+            const popup = document.getElementById('searchResults');
+            
+            if (!query || results.length === 0) {
+                popup.style.display = 'none';
+                return;
+            }
+            
+            popup.style.display = 'block';
+            popup.innerHTML = results.map(r => `
+                <div onclick="showJsonEditor('${r.path}')" 
+                     style="padding:10px;margin:5px 0;background:#12121a;border-radius:8px;cursor:pointer;"
+                     onmouseover="this.style.background='#1a1a24'">
+                    <div style="font-size:0.8rem;color:#00d4ff;">${r.type}</div>
+                    <div style="font-size:0.9rem;">${r.name}</div>
+                    <div style="font-size:0.7rem;color:#555;">${r.path}</div>
+                </div>
+            `).join('');
+        }
+        
+        // Close search on click outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#configSearch') && !e.target.closest('#searchResults')) {
+                document.getElementById('searchResults').style.display = 'none';
+            }
+        });
+        function searchConfig(query) {
+            if (!query || query.length < 2) return [];
+            query = query.toLowerCase();
+            const results = [];
+            
+            // Search sites
+            config.sites.forEach(site => {
+                if (site.name && site.name.toLowerCase().includes(query)) {
+                    results.push({ type: 'site', name: site.name, path: 'sites > ' + site.name });
+                }
+                if (site.wp && site.wp.api_base && site.wp.api_base.toLowerCase().includes(query)) {
+                    results.push({ type: 'wp', name: 'API: ' + site.wp.api_base, path: 'sites > ' + site.name + ' > wp > api_base' });
+                }
+                
+                // Search brands
+                const structure = site.search?.structure || {};
+                for (let section in structure) {
+                    if (section.toLowerCase().includes(query)) {
+                        results.push({ type: 'brand', name: section, path: 'sites > ' + site.name + ' > search > structure > ' + section });
+                    }
+                    const data = structure[section];
+                    if (typeof data === 'object') {
+                        for (let sub in data) {
+                            if (sub.toLowerCase().includes(query)) {
+                                results.push({ type: 'brand', name: sub, path: 'sites > ' + site.name + ' > search > structure > ' + section + ' > ' + sub });
+                            }
+                        }
+                    }
+                }
+            });
+            
+            return results;
+        }
+        
+        // AI Chat
+        function addAiMessage(content, isUser = false) {
+            const chat = document.getElementById('aiChat');
+            const div = document.createElement('div');
+            div.style.cssText = isUser ? 'text-align:right;margin:8px 0;color:#00d4ff;' : 'text-align:left;margin:8px 0;';
+            div.innerHTML = isUser ? `<span style="background:#00d4ff20;padding:8px 12px;border-radius:12px 12px 0 12px;">${content}</span>` : 
+                `<span style="background:#7b2cbf20;padding:8px 12px;border-radius:12px 12px 12px 0;">${content}</span>`;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }
+        
+        function sendAiMessage() {
+            const input = document.getElementById('aiPrompt');
+            const msg = input.value.trim();
+            if (!msg) return;
+            
+            addAiMessage(msg, true);
+            input.value = '';
+            
+            // Simulate AI response (in real use, call the LLM)
+            addAiMessage('Processing your request: "' + msg + '"...', false);
+        }
+        
+        // JSON Editor Modal
+        function showJsonEditor(path) {
+            // This would open a modal to edit the specific JSON path
+            alert('Edit: ' + path);
+        }
+        
+        function addLog(msg, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const viewer = document.getElementById('logViewer');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${msg}</span>`;
+            viewer.appendChild(entry);
+            viewer.scrollTop = viewer.scrollHeight;
+        }
+        
+        function addActivity(icon, title, meta) {
+            const feed = document.getElementById('activityFeed');
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            item.innerHTML = `<div class="activity-icon ${icon}">${icon.includes('search') ? '🔍' : icon.includes('llm') ? '🤖' : '📝'}</div>
+                <div class="activity-content"><div class="activity-title">${title}</div><div class="activity-meta">${meta}</div></div>`;
+            feed.insertBefore(item, feed.firstChild);
+            while (feed.children.length > 15) feed.removeChild(feed.lastChild);
+        }
+        
+        function updateStats() {
+            document.getElementById('statFetched').textContent = stats.fetched;
+            document.getElementById('statProcessed').textContent = stats.processed;
+            document.getElementById('statCreated').textContent = stats.created;
+            document.getElementById('statSkipped').textContent = stats.skipped;
+        }
+        
+        async function runPipeline() {
+            addLog('Starting pipeline...', 'info');
+            addActivity('icon-search', 'Pipeline started', 'Fetching news...');
+            try {
+                await fetch('/api/run-pipeline', { method: 'POST' });
+            } catch(e) {
+                addLog('Pipeline error: ' + e.message, 'warn');
+            }
+        }
+        
+        async function fetchArticles() {
+            addLog('Fetching 50 articles from Feb 1st, 2025...', 'info');
+            addActivity('icon-search', 'Fetching articles', 'Spanning all categories...');
+            try {
+                const resp = await fetch('/api/fetch-50?date=2025-02-01', { method: 'POST' });
+                const data = await resp.json();
+                if (data.articles) {
+                    stats.fetched = data.articles.length;
+                    updateStats();
+                    addLog(`Fetched ${data.articles.length} articles`, 'success');
+                    data.articles.forEach((a, i) => {
+                        addActivity('icon-search', a.title?.slice(0, 40) || 'Article', a.category || 'Unknown');
+                    });
+                }
+            } catch(e) {
+                addLog('Fetch error: ' + e.message, 'error');
+            }
+        }
+        
+        async function loadImageStats() {
+            const site = config.sites.find(s => s.id === currentSiteId);
+            if (!site) return;
+            
+            try {
+                const resp = await fetch(site.wp.api_base + '/cnd/v1/stats', {
+                    headers: { 'Authorization': 'Bearer ' + config.wp_admin_token }
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    document.getElementById('imgTotal').textContent = data.total_posts || 0;
+                    document.getElementById('imgWith').textContent = data.with_featured_image || 0;
+                    document.getElementById('imgNeed').textContent = data.missing_featured_image || 0;
+                }
+            } catch(e) {
+                console.log('WP API not reachable');
+            }
+        }
+        
+        async function loadPostsNeedImages() {
+            const site = config.sites.find(s => s.id === currentSiteId);
+            if (!site) return;
+            
+            try {
+                const resp = await fetch(site.wp.api_base + '/cnd/v1/posts-needs-images?limit=20', {
+                    headers: { 'Authorization': 'Bearer ' + config.wp_admin_token }
+                });
+                if (resp.ok) {
+                    const posts = await resp.json();
+                    let html = '';
+                    posts.forEach(p => {
+                        html += `<div style="display:flex;align-items:center;gap:15px;padding:12px;background:#0a0a0f;border-radius:8px;margin-bottom:8px;">
+                            <input type="checkbox" value="${p.id}" class="post-checkbox">
+                            <div style="flex:1;">
+                                <div style="font-weight:500;font-size:0.85rem;">${p.title}</div>
+                                <div style="font-size:0.7rem;color:#555;">${p.date}</div>
+                            </div>
+                            <span style="color:${p.has_featured ? '#00ff88' : '#ff8800'};font-size:0.75rem;">
+                                ${p.has_featured ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>'} Featured
+                            </span>
+                        </div>`;
+                    });
+                    document.getElementById('postsNeedImages').innerHTML = html || '<div style="color:#555;">All posts have featured images!</div>';
+                }
+            } catch(e) {
+                document.getElementById('postsNeedImages').innerHTML = '<div style="color:#ff4444;">Failed to load</div>';
+            }
+        }
+        
+        async function loadPostsNeedOg() {
+            const site = config.sites.find(s => s.id === currentSiteId);
+            if (!site) return;
+            
+            try {
+                const resp = await fetch(site.wp.api_base + '/cnd/v1/posts-needs-og?limit=20', {
+                    headers: { 'Authorization': 'Bearer ' + config.wp_admin_token }
+                });
+                if (resp.ok) {
+                    const posts = await resp.json();
+                    let html = '';
+                    posts.forEach(p => {
+                        html += `<div style="display:flex;align-items:center;gap:15px;padding:12px;background:#0a0a0f;border-radius:8px;margin-bottom:8px;">
+                            <input type="checkbox" value="${p.id}" class="post-checkbox-og">
+                            <div style="flex:1;">
+                                <div style="font-weight:500;font-size:0.85rem;">${p.title}</div>
+                                <div style="font-size:0.7rem;color:#555;">${p.date}</div>
+                            </div>
+                        </div>`;
+                    });
+                    document.getElementById('postsNeedOg').innerHTML = html || '<div style="color:#555;">All posts have OG images!</div>';
+                }
+            } catch(e) {
+                document.getElementById('postsNeedOg').innerHTML = '<div style="color:#ff4444;">Failed to load</div>';
+            }
+        }
+        
+        async function loadPostsNeedTags() {
+            const site = config.sites.find(s => s.id === currentSiteId);
+            if (!site) return;
+            
+            try {
+                const resp = await fetch(site.wp.api_base + '/cnd/v1/posts-needs-tags?limit=20', {
+                    headers: { 'Authorization': 'Bearer ' + config.wp_admin_token }
+                });
+                if (resp.ok) {
+                    const posts = await resp.json();
+                    let html = '';
+                    posts.forEach(p => {
+                        html += `<div style="display:flex;align-items:center;gap:15px;padding:12px;background:#0a0a0f;border-radius:8px;margin-bottom:8px;">
+                            <input type="checkbox" value="${p.id}" class="post-checkbox-tags">
+                            <div style="flex:1;">
+                                <div style="font-weight:500;font-size:0.85rem;">${p.title}</div>
+                                <div style="font-size:0.7rem;color:#555;">${p.date}</div>
+                            </div>
+                        </div>`;
+                    });
+                    document.getElementById('postsNeedTags').innerHTML = html || '<div style="color:#555;">All posts have tags!</div>';
+                }
+            } catch(e) {
+                document.getElementById('postsNeedTags').innerHTML = '<div style="color:#ff4444;">Failed to load</div>';
+            }
+        }
+        
+        let selectedProvider = 'openclaw';
+        
+        function selectProvider(prov) {
+            selectedProvider = prov;
+            document.querySelectorAll('.provider-card').forEach(el => el.style.borderColor = 'transparent');
+            document.getElementById('prov' + prov.charAt(0).toUpperCase() + prov.slice(1)).style.borderColor = '#00d4ff';
+        }
+        
+        async function generateImage() {
+            const prompt = document.getElementById('genPrompt').value;
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+            
+            const width = parseInt(document.getElementById('genWidth').value) || 1024;
+            const height = parseInt(document.getElementById('genHeight').value) || 1024;
+            const resultDiv = document.getElementById('genResult');
+            
+            resultDiv.innerHTML = '<div style="color:#00d4ff;">Generating...</div>';
+            
+            try {
+                let resp, data;
+                
+                if (selectedProvider === 'comfyui') {
+                    const url = document.getElementById('comfyuiUrl').value;
+                    resp = await fetch(url + '/prompt', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            prompt: { nodes: [{ inputs: { text: prompt, width, height } }] }
+                        })
+                    });
+                    data = await resp.json();
+                    resultDiv.innerHTML = `<div style="color:#00ff88;">ComfyUI queue: ${data.prompt_id}</div>`;
+                } 
+                else if (selectedProvider === 'a1111') {
+                    const url = document.getElementById('a1111Url').value;
+                    resp = await fetch(url + '/sdapi/v1/txt2img', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt, width, height, steps: 20 })
+                    });
+                    data = await resp.json();
+                    resultDiv.innerHTML = `<div style="color:#00ff88;">A1111 generated! <a href="data:image/png;base64,${data.images[0]}" download="image.png">Download</a></div>`;
+                }
+                else {
+                    // OpenClaw
+                    const site = config.sites.find(s => s.id === currentSiteId);
+                    resp = await fetch(site.wp.api_base + '/cnd/v1/generate/0', {
+                        method: 'POST',
+                        headers: { 
+                            'Authorization': 'Bearer ' + config.wp_admin_token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ prompt, width, height })
+                    });
+                    data = await resp.json();
+                    resultDiv.innerHTML = data.success ? 
+                        `<div style="color:#00ff88;">Generated! <a href="${data.image_url}" target="_blank">View</a></div>` :
+                        `<div style="color:#ff4444;">Error: ${data.message}</div>`;
+                }
+            } catch(e) {
+                resultDiv.innerHTML = `<div style="color:#ff4444;">Error: ${e.message}</div>`;
+            }
+        }
+        
+        async function deployOpenClaw() {
+            const status = document.getElementById('deployStatus');
+            status.innerHTML = '<span style="color:#00d4ff;">Deploying OpenClaw...</span>';
+            
+            try {
+                const resp = await fetch('/api/deploy-openclaw', { method: 'POST' });
+                const data = await resp.json();
+                if (data.success) {
+                    status.innerHTML = '<span style="color:#00ff88;">✓ OpenClaw deployed! URL: ' + data.url + '</span>';
+                } else {
+                    status.innerHTML = '<span style="color:#ff4444;">Error: ' + data.error + '</span>';
+                }
+            } catch(e) {
+                status.innerHTML = '<span style="color:#ff4444;">Error: ' + e.message + '</span>';
+            }
+        }
+        
+        function downloadOpenClawAgent() {
+            window.location.href = '/api/download-openclaw-agent';
+            document.getElementById('agentStatus').innerHTML = '<span style="color:#00ff88;">Downloaded! Run: chmod +x openclaw-agent.sh && ./openclaw-agent.sh</span>';
+        }
+        
+        function saveGeneratorSettings() {
+            const settings = {
+                comfyui: document.getElementById('comfyuiUrl').value,
+                a1111: document.getElementById('a1111Url').value,
+                openclaw: document.getElementById('openclawUrl').value
+            };
+            localStorage.setItem('cnd_gen_settings', JSON.stringify(settings));
+            addLog('Generator settings saved', 'success');
+        }
+        
+        function loadGeneratorSettings() {
+            const saved = localStorage.getItem('cnd_gen_settings');
+            if (saved) {
+                const s = JSON.parse(saved);
+                document.getElementById('comfyuiUrl').value = s.comfyui || 'http://localhost:8188';
+                document.getElementById('a1111Url').value = s.a1111 || 'http://localhost:7860';
+                document.getElementById('openclawUrl').value = s.openclaw || 'http://localhost:8050';
+            }
+        }
+        
+        // Drag and drop for nav
+        function initNavDragDrop() {
+            const navItems = document.querySelector('.nav-items');
+            
+            navItems.addEventListener('dragover', e => {
+                e.preventDefault();
+                const dragging = document.querySelector('.nav-item.dragging');
+                const siblings = [...navItems.querySelectorAll('.nav-item:not(.dragging)')];
+                const nextSibling = siblings.find(s => e.clientY < s.getBoundingClientRect().top + s.offsetHeight / 2);
+                navItems.insertBefore(dragging, nextSibling);
+            });
+            
+            navItems.addEventListener('dragstart', e => {
+                e.target.classList.add('dragging');
+            });
+            
+            navItems.addEventListener('dragend', e => {
+                e.target.classList.remove('dragging');
+            });
+        }
+        
+        async function loadPostsNeedImages() {
+            const site = config.sites.find(s => s.id === currentSiteId);
+            if (!site) return;
+            
+            try {
+                const resp = await fetch(site.wp.api_base + '/cnd/v1/posts-needs-images?limit=20', {
+                    headers: { 'Authorization': 'Bearer ' + config.wp_admin_token }
+                });
+                if (resp.ok) {
+                    const posts = await resp.json();
+                    let html = '';
+                    posts.forEach(p => {
+                        html += `<div style="display:flex;align-items:center;gap:15px;padding:12px;background:#0a0a0f;border-radius:8px;margin-bottom:8px;">
+                            <input type="checkbox" value="${p.id}" class="post-checkbox">
+                            <div style="flex:1;">
+                                <div style="font-weight:500;font-size:0.85rem;">${p.title}</div>
+                                <div style="font-size:0.7rem;color:#555;">${p.date} | ${p.description?.slice(0, 60)}...</div>
+                            </div>
+                            <button class="btn btn-secondary" style="padding:6px 12px;font-size:0.75rem;" onclick="generateSingleImage(${p.id})">Generate</button>
+                        </div>`;
+                    });
+                    document.getElementById('postsNeedImages').innerHTML = html || '<div style="color:#555;text-align:center;padding:20px;">All posts have images! 🎉</div>';
+                }
+            } catch(e) {
+                document.getElementById('postsNeedImages').innerHTML = '<div style="color:#ff4444;">Failed to load posts. Make sure OpenClaw plugin is installed.</div>';
+            }
+        }
+        
+        async function generateSingleImage(postId) {
+            addLog(`Generating image for post ${postId}...`, 'info');
+            const site = config.sites.find(s => s.id === currentSiteId);
+            try {
+                const resp = await fetch(site.wp.api_base + '/cnd/v1/generate/' + postId, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + config.wp_admin_token }
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    addLog(`Image generated for post ${postId}`, 'success');
+                    loadPostsNeedImages();
+                    loadImageStats();
+                } else {
+                    addLog('Generation failed: ' + (data.message || 'Unknown error'), 'error');
+                }
+            } catch(e) {
+                addLog('Error: ' + e.message, 'error');
+            }
+        }
+        
+        async function generateImages(type) {
+            const site = config.sites.find(s => s.id === currentSiteId);
+            if (!site) return;
+            
+            const endpoint = type === 'og' ? 'posts-needs-og' : 'posts-needs-images';
+            const method = document.getElementById('imgMethod').value;
+            
+            try {
+                const resp = await fetch(site.wp.api_base + '/cnd/v1/' + endpoint + '?limit=50', {
+                    headers: { 'Authorization': 'Bearer ' + config.wp_admin_token }
+                });
+                const posts = await resp.json();
+                
+                if (!posts || posts.length === 0) {
+                    addLog('No posts need ' + type + ' images', 'info');
+                    return;
+                }
+                
+                addLog('Generating ' + type + ' images for ' + posts.length + ' posts via ' + method, 'info');
+                
+                for (const post of posts.slice(0, 10)) {
+                    const genEndpoint = type === 'og' ? 'generate-og' : 'generate';
+                    const genResp = await fetch(site.wp.api_base + '/cnd/v1/' + genEndpoint + '/' + post.id + '?method=' + method, {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + config.wp_admin_token }
+                    });
+                    const result = await genResp.json();
+                    if (result.success) {
+                        addLog('Generated ' + type + ' for: ' + post.title.slice(0, 30), 'success');
+                    }
+                }
+                
+                loadPostsNeedImages();
+                loadPostsNeedOg();
+                loadImageStats();
+            } catch(e) {
+                addLog('Error: ' + e.message, 'error');
+            }
+        }
+        
+        async function analyzeTags() {
+            const site = config.sites.find(s => s.id === currentSiteId);
+            if (!site) return;
+            
+            try {
+                const resp = await fetch(site.wp.api_base + '/cnd/v1/posts-needs-tags?limit=10', {
+                    headers: { 'Authorization': 'Bearer ' + config.wp_admin_token }
+                });
+                const posts = await resp.json();
+                
+                if (!posts || posts.length === 0) {
+                    addLog('All posts have tags!', 'info');
+                    return;
+                }
+                
+                addLog('Analyzing and adding tags to ' + posts.length + ' posts...', 'info');
+                
+                for (const post of posts.slice(0, 5)) {
+                    const tagResp = await fetch(site.wp.api_base + '/cnd/v1/tags/analyze/' + post.id, {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + config.wp_admin_token }
+                    });
+                    const result = await tagResp.json();
+                    if (result.success) {
+                        addLog('Tags added to: ' + post.title.slice(0, 30) + ' = ' + (result.tags || []).join(', '), 'success');
+                    }
+                }
+                
+                loadPostsNeedTags();
+            } catch(e) {
+                addLog('Tag error: ' + e.message, 'error');
+            }
+        }
+        
+        async function checkStatus() {
+            try {
+                const resp = await fetch('/api/status?t=' + Date.now());
+                const data = await resp.json();
+                const statusEl = document.getElementById('statusFloating');
+                const textEl = statusEl.querySelector('#statusText');
+                if (data.running) {
+                    statusEl.style.borderColor = '#00d4ff';
+                    textEl.textContent = 'Running';
+                    textEl.style.color = '#00d4ff';
+                } else {
+                    statusEl.style.borderColor = '#2a2a3a';
+                    textEl.textContent = 'Idle';
+                    textEl.style.color = '#888';
+                }
+                if (data.stats) {
+                    stats = data.stats;
+                    updateStats();
+                    updateCharts();
+                }
+            } catch(e) {}
+        }
+        
+        let pipelineChart, successChart;
+        
+        function initCharts() {
+            const pipelineCtx = document.getElementById('pipelineChart');
+            if (pipelineCtx) {
+                pipelineChart = new Chart(pipelineCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Found', 'Processed', 'Created', 'Skipped'],
+                        datasets: [{
+                            label: 'Articles',
+                            data: [0, 0, 0, 0],
+                            backgroundColor: ['#00d4ff', '#7b2cbf', '#00ff88', '#ff8800'],
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: '#1a1a24' }, ticks: { color: '#666' } },
+                            x: { grid: { display: false }, ticks: { color: '#666' } }
+                        }
+                    }
+                });
+            }
+            
+            const successCtx = document.getElementById('successChart');
+            if (successCtx) {
+                successChart = new Chart(successCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Created', 'Skipped'],
+                        datasets: [{
+                            data: [0, 0],
+                            backgroundColor: ['#00ff88', '#ff8800'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        cutout: '70%',
+                        plugins: { 
+                            legend: { position: 'bottom', labels: { color: '#888' } }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function updateCharts() {
+            if (pipelineChart) {
+                pipelineChart.data.datasets[0].data = [stats.fetched, stats.processed, stats.created, stats.skipped];
+                pipelineChart.update();
+            }
+            if (successChart) {
+                successChart.data.datasets[0].data = [stats.created, stats.skipped];
+                successChart.update();
+            }
+        }
+        
+        loadConfig();
+        initCharts();
+        initNavDragDrop();
+        loadGeneratorSettings();
+        setInterval(checkStatus, 3000);
+    </script>
+</body>
+</html>

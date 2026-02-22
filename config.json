@@ -1,0 +1,108 @@
+{
+  "wp_admin_token": "YOUR_WP_ADMIN_TOKEN_HERE",
+  "sites": [
+    {
+      "id": "creatornewsdesk",
+      "name": "Creator Newsdesk",
+      "active": true,
+      "wp": {
+        "api_base": "https://www.creatornewsdesk.com/wp-json",
+        "authors": [
+          {"id": 2, "user": "mmurphy", "password": "", "weight": 100, "categories": []}
+        ]
+      },
+"brave_keys": ["YOUR_BRAVE_API_KEY_HERE"],
+      "llm": {
+        "provider": "local",
+        "base_url": "http://172.17.0.1:1240",
+        "model": "Mistral-7B-Instruct-v0.3-Q4_K_M.gguf",
+        "api_key": ""
+      },
+      "external_ai": {
+        "xai": {
+          "enabled": false,
+          "api_key": "YOUR_XAI_API_KEY_HERE",
+          "model": "grok-2-1212"
+        },
+        "openai": {
+          "enabled": false,
+          "api_key": "",
+          "model": "gpt-4o"
+        },
+        "minimax": {
+          "enabled": false,
+          "api_key": "",
+          "model": "abab6.5s-chat"
+        }
+      },
+      "search": {
+        "structure": {
+          "Drones & Action Cameras": {
+            "DJI": {"brands": ["DJI", "DJI Mavic", "DJI Mini", "DJI Air", "DJI Osmo"], "description": "Latest DJI drone news, releases, reviews and tutorials for creators"},
+            "GoPro": {"brands": ["GoPro", "GoPro Hero", "GoPro Max"], "description": "GoPro action camera news, firmware updates and creator accessories"},
+            "Insta360": {"brands": ["Insta360", "Insta360 X4", "Insta360 One X2", "Insta360 Ace"], "description": "Insta360 camera news and 360 video content creation"},
+            "Skydio": {"brands": ["Skydio"], "description": "Skydio autonomous drone news for enterprise and creators"},
+            "Autel Robotics": {"brands": ["Autel Robotics", "Autel EVO", "Autel Dragonfish"], "description": "Autel drone news and releases"}
+          },
+          "Mirrorless & Cinema": {
+            "Sony": {"brands": ["Sony", "Sony Alpha", "Sony FX", "Sony a7IV", "Sony a7V", "Sony ZV-E1"], "description": "Sony camera news for vloggers, filmmakers and content creators"},
+            "Canon": {"brands": ["Canon", "Canon EOS", "Canon R5", "Canon R6", "Canon R8"], "description": "Canon camera news, lens releases and professional video gear"},
+            "Nikon": {"brands": ["Nikon", "Nikon Z8", "Nikon Z9"], "description": "Nikon mirrorless camera news and lens announcements"},
+            "Fujifilm": {"brands": ["Fujifilm", "Fujifilm X-T5", "Fujifilm GFX"], "description": "Fujifilm camera news for photography and video creators"},
+            "Panasonic": {"brands": ["Panasonic", "Panasonic Lumix"], "description": "Panasonic Lumix camera news and video production gear"},
+            "Blackmagic Design": {"brands": ["Blackmagic Design", "Blackmagic Pocket", "Blackmagic Cinema Camera"], "description": "Blackmagic video production gear, DaVinci Resolve and cinema cameras"},
+            "RED": {"brands": ["RED Digital Cinema", "RED Komodo", "RED V-Raptor"], "description": "RED cinema camera news for professional filmmakers"}
+          },
+          "Lenses": {
+            "Sigma": {"brands": ["Sigma"], "description": "Sigma lens news, releases and reviews for mirrorless cameras"},
+            "Tamron": {"brands": ["Tamron"], "description": "Tamron lens announcements and creator-focused optics"},
+            "Tokina": {"brands": ["Tokina"], "description": "Tokina lens news for video and photo creators"}
+          },
+          "Audio Gear": {
+            "Rode": {"brands": ["Rode", "Rode PodMic", "Rode NT1", "Rode Wireless GO", "Rode VideoMic"], "description": "Rode microphone news for podcasters, vloggers and content creators"},
+            "Shure": {"brands": ["Shure", "Shure SM7B", "Shure MV7"], "description": "Shure audio gear news for professional creators"},
+            "Sennheiser": {"brands": ["Sennheiser", "Sennheiser MKH", "Sennheiser EW"], "description": "Sennheiser microphone and audio equipment news"},
+            "Audio-Technica": {"brands": ["Audio-Technica", "AT2020"], "description": "Audio-Technica microphone news for home studios"}
+          },
+          "Lighting": {
+            "Aputure": {"brands": ["Aputure", "Aputure 300d", "Aputure 600d", "Aputure Amaran"], "description": "Aputure LED lighting news for video production and creators"},
+            "Nanlite": {"brands": ["Nanlite", "Nanlite PavoTube"], "description": "Nanlite lighting solutions for content creators"},
+            "Godox": {"brands": ["Godox", "Godox AD", "Godox V1"], "description": "Godox lighting news and budget-friendly creator gear"},
+            "Lume Cube": {"brands": ["Lume Cube"], "description": "Lume Cube portable lighting for on-the-go creators"}
+          },
+          "Gimbals & Stabilizers": {
+            "Zhiyun": {"brands": ["Zhiyun", "Zhiyun Crane", "Zhiyun Smooth"], "description": "Zhiyun gimbal news for mobile and mirrorless stabilization"},
+            "Moza": {"brands": ["Moza", "Moza AirCross"], "description": "Moza gimbal announcements and creator stabilization"},
+            "Hohem": {"brands": ["Hohem"], "description": "Hohem gimbal news for smartphone creators"},
+            "FeiyuTech": {"brands": ["FeiyuTech"], "description": "Feiyu gimbal news and stabilization gear"}
+          },
+          "Streaming & Capture": {
+            "Elgato": {"brands": ["Elgato", "Elgato Stream Deck", "Elgato Cam Link", "Elgato Wave"], "description": "Elgato streaming gear news for Twitch, YouTube and creators"},
+            "Logitech": {"brands": ["Logitech", "Logitech StreamCam", "Logitech Brio"], "description": "Logitech webcam and streaming equipment news"},
+            "Razer": {"brands": ["Razer", "Razer Kiyo", "Razer Stream"], "description": "Razer streaming and creator gear news"}
+          },
+          "Creators": {
+            "YouTube Stars": {"brands": ["MrBeast", "Marques Brownlee", "MKBHD", "Linus Tech Tips", "PewDiePie", "Markiplier", "Mark Rober"], "description": "YouTube creator news, drama and announcements"},
+            "TikTok Stars": {"brands": ["Charli D'Amelio", "Addison Rae", "Khabane Lame", "Bella Poarch", "WhistlinDiesel"], "description": "TikTok creator news and viral content announcements"},
+            "Twitch": {"brands": ["Ninja", "Shroud", "Pokimane", "xQc"], "description": "Twitch streamer news and platform updates"}
+          },
+          "Platform News": {
+            "YouTube": {"brands": ["YouTube monetization", "YouTube algorithm", "YouTube Premium", "YouTube Shorts"], "description": "YouTube platform news, policy changes and creator features"},
+            "TikTok": {"brands": ["TikTok Shop", "TikTok Creator Fund", "TikTok algorithm"], "description": "TikTok news, features and creator economy updates"},
+            "Instagram": {"brands": ["Instagram Reels", "Instagram algorithm", "Meta AI"], "description": "Instagram and Meta news for creators and influencers"}
+          }
+        },
+        "include_events": true,
+        "events": ["arrest", "scandal", "lawsuit", "new release", "launch", "announcement", "recall", "review", "firmware update"]
+      },
+      "publish_mode": "draft",
+      "backfill_days": 10
+    }
+  ],
+  "brave_keys": [],
+  "global_settings": {
+    "default_llm": "http://172.17.0.1:1240",
+    "crawl_rate": 50,
+    "auto_publish": false
+  }
+}
