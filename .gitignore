@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+env/
+*.log
+pipeline_status.json
+.DS_Store
+*.swp
+*.swo
+*~
