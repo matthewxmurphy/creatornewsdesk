@@ -11,3 +11,10 @@ pipeline_status.json
 *.swp
 *.swo
 *~
+.env
+.env.local
+.env.*.local
+processed_urls.json
+wp_cache.json
+.processed_urls.json
+.wp_cache.json

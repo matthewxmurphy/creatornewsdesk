@@ -1,5 +1,6 @@
 {
-  "wp_admin_token": "YOUR_WP_ADMIN_TOKEN_HERE",
+  "_comment": "Sensitive values should be set via environment variables. Copy .env.example to .env and fill in your values.",
+  "_comment_wp": "WP_USER and WP_APP_PASSWORD should be set in .env file",
   "sites": [
     {
       "id": "creatornewsdesk",
@@ -8,10 +9,10 @@
       "wp": {
         "api_base": "https://www.creatornewsdesk.com/wp-json",
         "authors": [
-          {"id": 2, "user": "mmurphy", "password": "", "weight": 100, "categories": []}
+          {"id": 2, "user": "YOUR_WP_USER", "password": "", "weight": 100, "categories": []}
         ]
       },
-"brave_keys": ["YOUR_BRAVE_API_KEY_HERE"],
+      "brave_keys": ["YOUR_BRAVE_API_KEY"],
       "llm": {
         "provider": "local",
         "base_url": "http://172.17.0.1:1240",
@@ -21,7 +22,7 @@
       "external_ai": {
         "xai": {
           "enabled": false,
-          "api_key": "YOUR_XAI_API_KEY_HERE",
+          "api_key": "YOUR_XAI_API_KEY",
           "model": "grok-2-1212"
         },
         "openai": {
