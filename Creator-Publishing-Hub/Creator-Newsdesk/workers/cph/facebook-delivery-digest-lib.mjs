@@ -37,7 +37,10 @@ export function summarizeFleet(snapshots = [], { now = new Date(), staleHours = 
     const published = Number(snapshot?.delivery?.published_rolling_24h || 0);
     const scheduled = Number(snapshot?.delivery?.future_scheduled || 0);
     const pastDue = Number(snapshot?.delivery?.past_due_scheduled || 0);
-    const details = [`${published} posts confirmed in the last 24 hours`, `${scheduled} future posts queued`];
+    const details = [
+      `${published} ${published === 1 ? 'post' : 'posts'} confirmed in the last 24 hours`,
+      `${scheduled} future ${scheduled === 1 ? 'post' : 'posts'} queued`,
+    ];
     if (pastDue) details.push(`${pastDue} older scheduled posts being moved forward`);
     automatic.push({
       site: name,
