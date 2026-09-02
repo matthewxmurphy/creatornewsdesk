@@ -8,6 +8,7 @@ import {
   extractExternalUrl,
   missingRunwaySlots,
   rankCategoryPerformance,
+  removeArtificialRecycleLabel,
   selectUniqueCandidates,
 } from '../facebook-runway-lib.mjs';
 
@@ -31,6 +32,12 @@ test('builds a clean first-publication caption without recycle language', () => 
 
 test('preserves an explicit editorial social caption', () => {
   assert.equal(buildFacebookCaption({ social_caption: 'A hand-written caption.' }, '#facts'), 'A hand-written caption.');
+});
+
+test('removes only the artificial recycle label from an existing caption', () => {
+  const message = 'Worth another look from The Factology Daily:\n\nThe real story.\n\nRead it here: https://example.com/story/';
+  assert.equal(removeArtificialRecycleLabel(message), 'The real story.\n\nRead it here: https://example.com/story/');
+  assert.equal(removeArtificialRecycleLabel('A normal caption.'), 'A normal caption.');
 });
 
 test('extracts the article URL and category from a social caption', () => {

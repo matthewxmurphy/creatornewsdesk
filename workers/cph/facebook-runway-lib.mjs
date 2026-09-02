@@ -33,6 +33,12 @@ export function buildFacebookCaption(item, hashtags = '') {
   ].filter((line) => line !== null).join('\n');
 }
 
+export function removeArtificialRecycleLabel(message) {
+  return String(message || '')
+    .replace(/^Worth another look from [^:\r\n]+:\s*/i, '')
+    .trim();
+}
+
 export function categoryForItem(item) {
   const explicit = item?.category || item?.primary_category;
   if (explicit) return normalizeCategory(explicit);
