@@ -24,13 +24,13 @@ test('an expired Facebook connection becomes one human action', () => {
   assert.match(summary.actionable[0].action, /Reconnect/);
 });
 
-test('digest waits three hours and suppresses the same issue for seven days', () => {
+test('digest waits three hours and never repeats the same unresolved issue', () => {
   const summary = { actionable: [{ site: 'Page', issue: 'Connection expired.', action: 'Reconnect.' }], automatic: [], healthy: [] };
-  const first = digestDecision({ summary, now, minimumAgeHours: 3, repeatHours: 168 });
+  const first = digestDecision({ summary, now, minimumAgeHours: 3, repeatHours: 0 });
   assert.equal(first.send, false);
-  const ready = digestDecision({ summary, previous: { fingerprint: first.fingerprint, first_seen_at: '2026-09-02T08:00:00Z' }, now, minimumAgeHours: 3, repeatHours: 168 });
+  const ready = digestDecision({ summary, previous: { fingerprint: first.fingerprint, first_seen_at: '2026-09-02T08:00:00Z' }, now, minimumAgeHours: 3, repeatHours: 0 });
   assert.equal(ready.send, true);
-  const repeated = digestDecision({ summary, previous: { fingerprint: first.fingerprint, first_seen_at: '2026-09-02T08:00:00Z', last_sent_at: '2026-09-02T10:00:00Z' }, now, minimumAgeHours: 3, repeatHours: 168 });
+  const repeated = digestDecision({ summary, previous: { fingerprint: first.fingerprint, first_seen_at: '2026-09-02T08:00:00Z', last_sent_at: '2026-01-01T00:00:00Z' }, now, minimumAgeHours: 3, repeatHours: 0 });
   assert.equal(repeated.send, false);
 });
 

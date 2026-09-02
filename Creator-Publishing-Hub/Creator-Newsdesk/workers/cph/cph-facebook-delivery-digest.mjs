@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { digestDecision, digestEmail, summarizeFleet } from './facebook-delivery-digest-lib.mjs';
-import { parseRecipients, positiveInteger } from './facebook-delivery-watchdog-lib.mjs';
+import { nonNegativeInteger, parseRecipients, positiveInteger } from './facebook-delivery-watchdog-lib.mjs';
 
 const workerDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(workerDirectory, '..', '..');
@@ -15,7 +15,7 @@ const profiles = String(process.env.CPH_DIGEST_PROFILES || 'thefactologydaily,da
   .split(/[\s,]+/).map((item) => item.trim()).filter(Boolean);
 const recipients = parseRecipients(process.env.CPH_DIGEST_EMAILS || process.env.CPH_ALERT_EMAILS);
 const minimumAgeHours = positiveInteger(process.env.CPH_DIGEST_MIN_ISSUE_AGE_HOURS, 3);
-const repeatHours = positiveInteger(process.env.CPH_DIGEST_REPEAT_HOURS, 168);
+const repeatHours = nonNegativeInteger(process.env.CPH_DIGEST_REPEAT_HOURS, 0);
 const statusRoot = path.resolve(process.env.CPH_FACEBOOK_DELIVERY_ARTIFACTS || path.join(projectRoot, 'artifacts', 'facebook-delivery'));
 const outputRoot = path.resolve(process.env.CPH_FACEBOOK_DIGEST_ARTIFACTS || path.join(projectRoot, 'artifacts', 'facebook-delivery-digest'));
 const stateFile = path.join(outputRoot, 'state.json');

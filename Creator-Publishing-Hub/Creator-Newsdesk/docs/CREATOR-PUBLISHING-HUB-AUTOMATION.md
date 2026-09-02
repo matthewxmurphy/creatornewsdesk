@@ -50,7 +50,7 @@
 - When the runway is short, record the exact missing-slot count and image-backed unique supply. Use Meta engagement by category only when the token exposes real metrics; otherwise rotate categories evenly and label the result as a balanced fallback.
 - The hourly image coordinator converts the prioritized category backlog into image-ready inventory. Controlled publish-ready timers publish at most one finished article every two hours, and the hourly runway worker schedules newly published inventory into the next open Meta slot.
 - Automatically reschedule Meta past-due posts into the next open two-hour slots in bounded batches, preserving the original posts and recording every changed ID and timestamp. Continue normal runway filling after the past-due queue is clear.
-- Page watchdogs stay silent and record-only. One fleet digest may email only when an issue still requires human action after automatic recovery has had time to run; routine shortages, cooldowns, recoveries, target changes, and healthy checks never email.
+- Page watchdogs stay silent and record-only. One fleet digest may email only when an issue still requires human action after automatic recovery has had time to run; routine shortages, cooldowns, recoveries, target changes, and healthy checks never email. The same unresolved action is emailed only once unless the required action changes.
 
 ## Verification boundary
 

@@ -10,7 +10,7 @@ This lane verifies Meta's `published_posts` edge instead of trusting WordPress s
 - Breaches send one email on the state change and repeat at most every six hours.
 - Creator Newsdesk recovery calls its existing lock-protected pipeline only after two consecutive breaches and never more than once every three hours.
 - Factology and Daily Smirk recovery write a bounded request file after two confirmed breaches whenever the future schedule is below 348 posts. A root-owned systemd path unit starts the runway worker, so the watchdog does not need elevated privileges.
-- Per-Page watchdogs are record-only and never email. The fleet digest checks hourly, waits three hours for automatic recovery, emails only for a Facebook connection that still needs human action, combines every Page into one plain-English message, and suppresses the same escalation for seven days.
+- Per-Page watchdogs are record-only and never email. The fleet digest checks hourly, waits three hours for automatic recovery, emails only for a Facebook connection that still needs human action, combines every Page into one plain-English message, and never repeats the same unresolved escalation unless the required action changes.
 - Automatic recovery is blocked when Meta already has future scheduled posts or any past-due scheduled backlog. This prevents duplicates and catch-up bursts.
 
 Install the service and timer templates plus profile drop-ins in `/etc/systemd/system/`, run `systemctl daemon-reload`, then enable the four configured Page timers.

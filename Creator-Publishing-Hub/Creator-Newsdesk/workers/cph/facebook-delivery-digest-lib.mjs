@@ -69,7 +69,7 @@ export function digestDecision({ summary, previous = {}, now = new Date(), minim
     return { send: false, reason: 'waiting_for_automatic_recovery', fingerprint, firstSeenAt };
   }
   const lastSentTime = sameIssue ? Date.parse(previous.last_sent_at || '') : NaN;
-  if (Number.isFinite(lastSentTime) && now.valueOf() - lastSentTime < repeatHours * 3_600_000) {
+  if (Number.isFinite(lastSentTime) && (repeatHours === 0 || now.valueOf() - lastSentTime < repeatHours * 3_600_000)) {
     return { send: false, reason: 'digest_repeat_suppressed', fingerprint, firstSeenAt };
   }
   return { send: true, reason: 'human_action_required', fingerprint, firstSeenAt };
@@ -93,6 +93,6 @@ export function digestEmail(summary) {
     for (const item of summary.automatic) lines.push(`- ${item.site}: ${item.issue} ${item.response}`);
   }
   if (summary.healthy.length) lines.push('', `Healthy: ${summary.healthy.join(', ')}.`);
-  lines.push('', 'You will not receive another email for the same issue for seven days unless the required action changes.');
+  lines.push('', 'You will not receive another email for the same unresolved issue unless the required action changes.');
   return { subject, lines };
 }

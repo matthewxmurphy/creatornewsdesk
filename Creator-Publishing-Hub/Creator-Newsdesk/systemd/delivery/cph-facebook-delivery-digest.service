@@ -11,7 +11,7 @@ WorkingDirectory=/home/mmurphy/homelab/projects/creatornewsdesk
 EnvironmentFile=/etc/creator-publishing-hub/sites/thefactologydaily.env
 Environment=CPH_DIGEST_PROFILES=thefactologydaily,dailysmirk,creditrepairchoices
 Environment=CPH_DIGEST_MIN_ISSUE_AGE_HOURS=3
-Environment=CPH_DIGEST_REPEAT_HOURS=168
+Environment=CPH_DIGEST_REPEAT_HOURS=0
 ExecStart=/usr/bin/node workers/cph/cph-facebook-delivery-digest.mjs
 Nice=10
 UMask=0077
