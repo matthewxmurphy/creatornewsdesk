@@ -10,44 +10,40 @@ const workerDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(workerDirectory, '..', '..');
 const statePath = path.resolve(process.env.CPH_CODEX_USAGE_STATE || path.join(projectRoot, 'artifacts', 'locks', 'cph-codex-usage-state.json'));
 
-export function classifyUsage(usedPercent, reachedType = null) {
+export function classifyUsage(usedPercent, reachedType = null, resetDetected = false) {
   const used = Math.max(0, Math.min(100, Number(usedPercent) || 0));
   if (reachedType || used > 80) {
     return {
       mode: 'protect',
-      creator_interval_minutes: 60,
+      governor_interval_hours: 12,
+      production_interval_minutes: 240,
+      recommended_rrule: 'RRULE:FREQ=HOURLY;INTERVAL=4',
       creator_max_jobs: 2,
-      fan_interval_minutes: null,
       fan_max_roles: 0,
       pause_noncritical_fan_work: true,
     };
   }
-  if (used > 60) {
+  if (used >= 50) {
     return {
-      mode: 'conserve',
-      creator_interval_minutes: 30,
+      mode: 'slow',
+      governor_interval_hours: 12,
+      production_interval_minutes: 60,
+      recommended_rrule: 'RRULE:FREQ=HOURLY;INTERVAL=1',
       creator_max_jobs: 4,
-      fan_interval_minutes: 60,
       fan_max_roles: 4,
       pause_noncritical_fan_work: false,
     };
   }
-  if (used > 35) {
-    return {
-      mode: 'standard',
-      creator_interval_minutes: 15,
-      creator_max_jobs: 6,
-      fan_interval_minutes: 30,
-      fan_max_roles: 6,
-      pause_noncritical_fan_work: false,
-    };
-  }
   return {
-    mode: 'burst',
-    creator_interval_minutes: 15,
+    mode: 'capacity_burst',
+    governor_interval_hours: 12,
+    production_interval_minutes: 15,
+    recommended_rrule: 'RRULE:FREQ=MINUTELY;INTERVAL=15',
     creator_max_jobs: 8,
-    fan_interval_minutes: 30,
     fan_max_roles: 8,
+    burst_trigger: resetDetected
+      ? 'automatic_usage_reset_detected'
+      : 'more_than_50_percent_usage_remaining',
     pause_noncritical_fan_work: false,
   };
 }
@@ -166,7 +162,11 @@ async function main() {
   };
   const previous = await readPreviousState();
   const events = detectUsageEvents(previous, current);
-  const throttle = classifyUsage(current.used_percent, current.rate_limit_reached_type);
+  const throttle = classifyUsage(
+    current.used_percent,
+    current.rate_limit_reached_type,
+    events.usage_window_reset_detected,
+  );
   const state = {
     schema: 'cph-codex-usage-mode/v1',
     ...current,

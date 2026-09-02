@@ -3,20 +3,36 @@ import test from 'node:test';
 
 import { classifyUsage, detectUsageEvents } from '../cph-codex-usage-mode.mjs';
 
-test('uses full bounded throughput while account usage is low', () => {
+test('uses the available capacity aggressively while more than half remains', () => {
   assert.deepEqual(classifyUsage(20), {
-    mode: 'burst',
-    creator_interval_minutes: 15,
+    mode: 'capacity_burst',
+    governor_interval_hours: 12,
+    production_interval_minutes: 15,
+    recommended_rrule: 'RRULE:FREQ=MINUTELY;INTERVAL=15',
     creator_max_jobs: 8,
-    fan_interval_minutes: 30,
     fan_max_roles: 8,
+    burst_trigger: 'more_than_50_percent_usage_remaining',
     pause_noncritical_fan_work: false,
   });
 });
 
-test('slows workload as the controlling usage window rises', () => {
-  assert.equal(classifyUsage(50).mode, 'standard');
-  assert.equal(classifyUsage(70).mode, 'conserve');
+test('labels a confirmed reset as the reason restored capacity is used aggressively', () => {
+  assert.deepEqual(classifyUsage(20, null, true), {
+    mode: 'capacity_burst',
+    governor_interval_hours: 12,
+    production_interval_minutes: 15,
+    recommended_rrule: 'RRULE:FREQ=MINUTELY;INTERVAL=15',
+    creator_max_jobs: 8,
+    fan_max_roles: 8,
+    burst_trigger: 'automatic_usage_reset_detected',
+    pause_noncritical_fan_work: false,
+  });
+});
+
+test('slows back down once 50 percent of the controlling window is used', () => {
+  assert.equal(classifyUsage(49, null, true).mode, 'capacity_burst');
+  assert.equal(classifyUsage(50, null, true).mode, 'slow');
+  assert.equal(classifyUsage(70).mode, 'slow');
   assert.equal(classifyUsage(90).mode, 'protect');
   assert.equal(classifyUsage(10, 'primary').mode, 'protect');
 });
