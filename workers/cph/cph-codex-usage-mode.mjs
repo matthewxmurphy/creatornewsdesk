@@ -55,12 +55,21 @@ export function classifyUsage(usedPercent, reachedType = null) {
 export function detectUsageEvents(previous, current) {
   const previousUsed = Number(previous?.used_percent);
   const currentUsed = Number(current?.used_percent);
+  const previousResetsAt = Number(previous?.primary?.resetsAt);
+  const currentResetsAt = Number(current?.primary?.resetsAt);
   const previousCredits = Number(previous?.reset_credits_available || 0);
   const currentCredits = Number(current?.reset_credits_available || 0);
+  const usageDropped = Number.isFinite(previousUsed)
+    && Number.isFinite(currentUsed)
+    && previousUsed - currentUsed >= 5;
+  const resetTimestampAdvanced = Number.isFinite(previousResetsAt)
+    && Number.isFinite(currentResetsAt)
+    && currentResetsAt > previousResetsAt
+    && currentUsed <= previousUsed;
   return {
-    usage_window_reset_detected: Number.isFinite(previousUsed)
-      && Number.isFinite(currentUsed)
-      && previousUsed - currentUsed >= 20,
+    usage_window_reset_detected: usageDropped || resetTimestampAdvanced,
+    usage_percent_drop: usageDropped ? previousUsed - currentUsed : 0,
+    reset_timestamp_advanced: resetTimestampAdvanced,
     new_reset_credit_detected: currentCredits > previousCredits,
   };
 }

@@ -23,10 +23,24 @@ test('slows workload as the controlling usage window rises', () => {
 
 test('detects a replenished usage window and newly granted reset credit', () => {
   assert.deepEqual(detectUsageEvents(
-    { used_percent: 78, reset_credits_available: 0 },
-    { used_percent: 12, reset_credits_available: 1 },
+    { used_percent: 78, primary: { resetsAt: 100 }, reset_credits_available: 0 },
+    { used_percent: 12, primary: { resetsAt: 200 }, reset_credits_available: 1 },
   ), {
     usage_window_reset_detected: true,
+    usage_percent_drop: 66,
+    reset_timestamp_advanced: true,
     new_reset_credit_detected: true,
+  });
+});
+
+test('detects an automatic replenishment from a newly advanced reset window', () => {
+  assert.deepEqual(detectUsageEvents(
+    { used_percent: 2, primary: { resetsAt: 100 }, reset_credits_available: 0 },
+    { used_percent: 2, primary: { resetsAt: 200 }, reset_credits_available: 0 },
+  ), {
+    usage_window_reset_detected: true,
+    usage_percent_drop: 0,
+    reset_timestamp_advanced: true,
+    new_reset_credit_detected: false,
   });
 });
