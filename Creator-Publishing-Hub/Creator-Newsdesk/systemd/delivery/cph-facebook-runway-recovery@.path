@@ -1,0 +1,9 @@
+[Unit]
+Description=Start the Facebook runway worker when %i requests recovery
+
+[Path]
+PathChanged=/home/mmurphy/homelab/projects/creatornewsdesk/artifacts/facebook-delivery/%i.recover
+Unit=cph-facebook-runway@%i.service
+
+[Install]
+WantedBy=multi-user.target

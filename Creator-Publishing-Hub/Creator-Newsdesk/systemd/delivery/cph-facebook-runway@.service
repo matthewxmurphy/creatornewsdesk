@@ -1,0 +1,21 @@
+[Unit]
+Description=Maintain Meta's 29-day Facebook schedule runway for %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=mmurphy
+Group=mmurphy
+WorkingDirectory=/home/mmurphy/homelab/projects/creatornewsdesk
+EnvironmentFile=/etc/creator-publishing-hub/sites/%i.env
+Environment=CPH_RUNWAY_PROFILE=%i
+Environment=CPH_FACEBOOK_RUNWAY_DAYS=29
+Environment=CPH_FACEBOOK_POSTS_PER_DAY=12
+Environment=CPH_FACEBOOK_RUNWAY_MAX_ADD=50
+ExecStart=/usr/bin/flock -n /run/lock/cph-facebook-runway-%i.lock /usr/bin/node workers/cph/cph-facebook-runway.mjs --schedule
+Nice=10
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

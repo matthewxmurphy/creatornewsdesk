@@ -1,0 +1,12 @@
+[Unit]
+Description=Check hourly for CPH Facebook issues that genuinely need human action
+
+[Timer]
+OnBootSec=15m
+OnUnitActiveSec=1h
+RandomizedDelaySec=5m
+Persistent=true
+Unit=cph-facebook-delivery-digest.service
+
+[Install]
+WantedBy=timers.target

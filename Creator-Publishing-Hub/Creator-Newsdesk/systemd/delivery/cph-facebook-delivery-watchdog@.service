@@ -1,0 +1,22 @@
+[Unit]
+Description=Verify Meta-confirmed Facebook delivery for %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=mmurphy
+Group=mmurphy
+WorkingDirectory=/home/mmurphy/homelab/projects/creatornewsdesk
+EnvironmentFile=/etc/creator-publishing-hub/sites/%i.env
+Environment=CPH_DELIVERY_PROFILE=%i
+Environment=CPH_FACEBOOK_FAIL_ON_BREACH=1
+Environment=CPH_FACEBOOK_RECOVERY_CONSECUTIVE_BREACHES=2
+Environment=CPH_FACEBOOK_RECOVERY_COOLDOWN_HOURS=3
+Environment=CPH_FACEBOOK_ALERT_REPEAT_HOURS=6
+ExecStart=/usr/bin/node workers/cph/cph-facebook-delivery-watchdog.mjs
+Nice=10
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

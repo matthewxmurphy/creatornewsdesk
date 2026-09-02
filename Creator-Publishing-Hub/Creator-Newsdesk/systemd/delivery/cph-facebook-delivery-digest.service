@@ -1,0 +1,20 @@
+[Unit]
+Description=Send one plain-English CPH Facebook action digest when human help is required
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=mmurphy
+Group=mmurphy
+WorkingDirectory=/home/mmurphy/homelab/projects/creatornewsdesk
+EnvironmentFile=/etc/creator-publishing-hub/sites/thefactologydaily.env
+Environment=CPH_DIGEST_PROFILES=thefactologydaily,dailysmirk,creditrepairchoices
+Environment=CPH_DIGEST_MIN_ISSUE_AGE_HOURS=3
+Environment=CPH_DIGEST_REPEAT_HOURS=168
+ExecStart=/usr/bin/node workers/cph/cph-facebook-delivery-digest.mjs
+Nice=10
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

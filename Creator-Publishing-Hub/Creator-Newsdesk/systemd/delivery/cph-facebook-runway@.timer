@@ -1,0 +1,12 @@
+[Unit]
+Description=Replenish Meta's 29-day Facebook schedule runway for %i
+
+[Timer]
+OnBootSec=5m
+OnUnitActiveSec=1h
+RandomizedDelaySec=5m
+Persistent=true
+Unit=cph-facebook-runway@%i.service
+
+[Install]
+WantedBy=timers.target
