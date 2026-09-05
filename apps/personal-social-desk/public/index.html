@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="application-name" content="Creator Social Desk">
+  <meta name="apple-mobile-web-app-title" content="Creator Social Desk">
+  <title>Creator Publishing Hub: Social Desk</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="/styles.css?v=23">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-lockup">
+      <img src="/icon-192.png" alt="Matthew Murphy" class="brand-mark">
+      <div><p class="eyebrow">CREATOR PUBLISHING HUB</p><h1>Social Desk</h1></div>
+    </div>
+    <div class="scan-progress" role="group" aria-label="Recurring profile monitoring pass">
+      <div class="scan-ring" id="scan-progress-ring"><strong id="scan-progress-percentage">0%</strong></div>
+      <div class="scan-progress-copy"><strong>CONTINUOUS PROFILE MONITORING</strong><span><b id="scan-progress-processed">0</b> checked · <b id="scan-progress-remaining">0</b> of ≈24K not covered</span><small id="scan-progress-coverage">Loading full follower coverage…</small></div>
+      <svg id="scan-progress-history" class="scan-progress-history" viewBox="0 0 260 44" role="img" aria-label="Recurring profile monitoring history"><polyline points="0,43 260,43"></polyline></svg>
+      <button id="scan-progress-refresh" class="scan-progress-refresh" type="button" title="Refresh scan progress now" aria-label="Refresh scan progress now"><i class="fa-solid fa-rotate"></i></button>
+    </div>
+    <a class="status" href="http://100.80.51.78:8888/" target="_blank" rel="noopener" title="Open Ryzen publishing operations"><span></span> Ryzen connected <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+  </header>
+
+  <nav class="tabs" aria-label="Creator Social Desk views">
+    <button class="tab active" data-view="queue" title="Work now" aria-label="Work now"><i class="fa-solid fa-house"></i><span>Work now</span></button>
+    <button class="tab" data-view="stories" title="Stories" aria-label="Stories"><i class="fa-solid fa-circle-play"></i><span>Stories</span></button>
+    <button class="tab" data-view="compose" title="Compose" aria-label="Compose"><i class="fa-solid fa-pen-to-square"></i><span>Compose</span></button>
+    <button class="tab" data-view="insights" title="Insights" aria-label="Insights"><i class="fa-solid fa-chart-column"></i><span>Insights</span></button>
+    <button class="tab" data-view="people" title="People CRM" aria-label="People"><i class="fa-solid fa-user-group"></i><span>People</span></button>
+    <button class="tab" data-view="comments" title="Replies" aria-label="Replies"><i class="fa-solid fa-comment-dots"></i><span>Replies</span></button>
+    <button class="tab" data-view="published-comments" title="Post comments" aria-label="Post comments"><i class="fa-solid fa-comment-medical"></i><span>Post comments</span></button>
+    <button class="tab" data-view="media-library" title="Media" aria-label="Media"><i class="fa-solid fa-photo-film"></i><span>Media</span></button>
+  </nav>
+
+  <nav class="people-subnav" aria-label="Follower views" hidden>
+    <button class="people-subtab active" type="button" data-audience-filter="all" title="All followers"><i class="fa-solid fa-users"></i><span>All</span></button>
+    <button class="people-subtab" type="button" data-people-panel="stats" title="Follower statistics"><i class="fa-solid fa-chart-pie"></i><span>Stats</span></button>
+    <button class="people-subtab" type="button" data-audience-filter="friends" title="Facebook friends"><i class="fa-solid fa-user-group"></i><span>Friends</span></button>
+    <button class="people-subtab" type="button" data-audience-filter="birthdays" title="Birthdays found"><i class="fa-solid fa-cake-candles"></i><span>Birthdays</span></button>
+    <button class="people-subtab" type="button" data-audience-filter="engaged" title="Engaged followers"><i class="fa-solid fa-thumbs-up"></i><span>Engaged</span></button>
+    <button class="people-subtab priority-subtab" type="button" data-audience-filter="top-engager" title="Top engagers"><i class="fa-solid fa-trophy"></i><span>Top engagers</span></button>
+    <button class="people-subtab" type="button" data-audience-filter="monitoring" title="Monitoring"><i class="fa-solid fa-eye"></i><span>Monitoring</span></button>
+    <button class="people-subtab" type="button" data-audience-filter="linked" title="Linked profiles"><i class="fa-solid fa-link"></i><span>Linked</span></button>
+  </nav>
+
+  <main>
+    <section id="queue" class="view active">
+      <div id="queue-summary" class="queue-summary"></div>
+      <section class="creator-group-lane" aria-labelledby="creator-group-lane-title">
+        <header>
+          <div><p class="eyebrow">CREATOR NEWSDESK</p><h2 id="creator-group-lane-title">Meta/Facebook group desk</h2><p id="creator-group-lane-detail">Capturing #CreatorsListenUp posts from Matthew's public timeline.</p></div>
+          <a href="https://www.facebook.com/groups/1451130882820932/" target="_blank" rel="noopener" title="Open Built Not Begged: Creator Growth Hub" aria-label="Open Built Not Begged: Creator Growth Hub"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+        </header>
+        <div id="creator-group-summary" class="creator-group-summary"></div>
+        <div class="creator-group-state">
+          <p id="creator-group-membership">Creator Newsdesk Page · joined · preapproved to post</p>
+          <button id="creator-group-rebuild" class="text-action" type="button" title="Rebuild the next seven days from newly captured eligible posts"><i class="fa-solid fa-arrows-rotate"></i><span>Rebuild 7-day schedule</span></button>
+        </div>
+        <div id="creator-group-next" class="creator-group-next"></div>
+      </section>
+      <div class="section-head feed-head">
+        <div><p class="eyebrow">APPROVAL FEED</p><h2>Work now</h2></div>
+        <select id="status-filter" aria-label="Filter drafts"><option value="all">All statuses</option><option>draft</option><option>approved</option><option>rejected</option></select>
+      </div>
+      <div id="work-now" class="feed-list"></div>
+    </section>
+
+    <section id="stories" class="view">
+      <div class="section-head"><div><p class="eyebrow">VERTICAL QUEUE</p><h2>Stories ready to make</h2></div></div>
+      <p class="view-note">Each Story is an original companion to a scheduled post, not a generic Fact or Fiction template.</p>
+      <div id="story-list" class="queue-list"></div>
+    </section>
+
+    <section id="compose" class="view">
+      <div class="section-head"><div><p class="eyebrow">NEW DRAFT</p><h2>Shape the post before automation</h2></div></div>
+      <form id="compose-form" class="composer">
+        <label>Title<input name="title" required maxlength="140" placeholder="A clear working title"></label>
+        <label>Post text<textarea name="body" required rows="7" placeholder="Write the claim, story, or question here."></textarea></label>
+        <div class="form-row">
+          <label>Destination<select name="target"><option value="personal-review">Matthew profile - review required</option><option value="creditrepairchoices-page">Credit Repair Choices Page</option></select></label>
+          <label>Format<select name="format"><option value="feed">Feed</option><option value="discussion">Discussion</option><option value="story">Story</option><option value="reel">Reel</option></select></label>
+        </div>
+        <label>Schedule<input type="datetime-local" name="scheduledFor"></label>
+        <label>Editor notes<textarea name="notes" rows="3" placeholder="Source, visual direction, or fact-check notes"></textarea></label>
+        <div class="prompt-tools">
+          <button type="button" id="graphic-prompt">Build graphic prompt</button>
+          <button type="button" id="video-prompt">Build video prompt</button>
+        </div>
+        <label id="media-drop" class="media-drop">Attach media<input id="media-files" type="file" accept="image/*,video/*" multiple></label>
+        <div id="media-list" class="queue-list"></div>
+        <output id="prompt-output" class="prompt-output" hidden></output>
+        <button type="submit" class="primary">Add to approval queue</button>
+      </form>
+    </section>
+
+    <section id="insights" class="view">
+      <div class="section-head"><div><p class="eyebrow">FACEBOOK EXPORT</p><h2>Find what earned attention</h2></div></div>
+      <div class="importer">
+        <strong>Waiting for the first Facebook export</strong>
+        <p>Import the unpacked Facebook JSON export. The analysis stays on this Mac and separates confirmed engagement from missing data.</p>
+        <label class="file-action">Choose Facebook JSON files<input id="export-files" type="file" accept="application/json,.json" multiple></label>
+        <p id="import-status" role="status"></p>
+      </div>
+      <div id="insight-results" class="insight-results"></div>
+      <section class="audience-review">
+        <div class="section-head compact"><div><p class="eyebrow">PUBLISHING PROOF</p><h2>Destination performance</h2></div><small id="publishing-insight-updated"></small></div>
+        <div id="publishing-insight-summary" class="queue-summary"></div>
+        <div id="publishing-insight-best-times" class="queue-list"></div>
+        <div id="publishing-insight-pages" class="queue-list"></div>
+        <div id="publishing-insight-hours" class="queue-list"></div>
+        <div id="publishing-insight-days" class="queue-list"></div>
+        <div id="publishing-insight-heatmap" class="queue-summary"></div>
+      </section>
+      <section class="audience-review">
+        <div class="section-head compact"><div><p class="eyebrow">AUDIENCE HEALTH</p><h2>Coverage and engagement summary</h2></div><button class="text-action" type="button" data-open-view="people">View all people <i class="fa-solid fa-arrow-right"></i></button></div>
+        <div id="audience-summary" class="queue-summary"></div>
+        <div id="audience-reports" class="queue-list"></div>
+        <p id="coverage-warning" class="view-note"></p>
+      </section>
+      <aside class="guardrail">
+        <strong>Follower cleanup</strong>
+        <p>The desk records a baseline, applies a first mark after 15 observed days without engagement, and moves the account to review after 30 days. Removal decisions remain manual.</p>
+      </aside>
+    </section>
+
+    <section id="people" class="view">
+      <section id="people-stats-panel" class="people-stats-panel" hidden>
+        <header><div><p class="eyebrow">FOLLOWER INTELLIGENCE</p><h2>Audience marketing snapshot</h2><p>Click any number or segment to see its breakdown and matching people.</p></div><span id="people-stats-updated">Loading live data…</span></header>
+        <div id="people-detail-stats" class="people-detail-stats stats-kpis"></div>
+        <div id="audience-intelligence-grid" class="audience-intelligence-grid"></div>
+        <section class="audience-location-browser" aria-labelledby="audience-location-browser-title"><header><div><h3 id="audience-location-browser-title">Public locations</h3><p>Select a country, then a state or area, then a city. Matching followers update at every level.</p></div><span id="audience-country-coverage"></span></header><div id="audience-country-browser" class="audience-country-browser"></div></section>
+        <section id="audience-drilldown" class="audience-drilldown" hidden><header><div><p class="eyebrow">SELECTED SEGMENT</p><h3 id="audience-drilldown-title">Audience breakdown</h3><p id="audience-drilldown-summary"></p></div><button id="audience-drilldown-clear" type="button">Clear selection</button></header><div id="audience-drilldown-breakdown" class="audience-drilldown-breakdown"></div><div class="audience-drilldown-people-head"><h4>People in this segment</h4><span id="audience-drilldown-people-count"></span></div><div id="audience-drilldown-people" class="audience-drilldown-people"></div></section>
+        <div id="people-report-grid" class="people-report-grid"></div>
+      </section>
+      <div id="followers-panel" class="followers-shell">
+        <header class="followers-head"><div><h2>Followers</h2><p><span id="people-shown-count">0</span> shown · <span id="followers-count">Loading followers…</span></p></div><button class="followers-options" type="button" title="Follower options" aria-label="Follower options"><i class="fa-solid fa-ellipsis"></i></button></header>
+        <div class="people-detail-stats" id="people-detail-stats-compact"></div>
+        <div class="people-filter-toolbar">
+          <label class="followers-search"><i class="fa-solid fa-magnifying-glass"></i><input id="audience-search" type="search" placeholder="Search name, job, company, or location"></label>
+          <label class="people-friend-toggle"><span>Show friends</span><input id="people-friend-toggle" type="checkbox" checked></label>
+          <nav class="profile-kind-switch" aria-label="Profile type"><button type="button" class="active" data-profile-kind="all">All <span id="profile-kind-all-count">0</span></button><button type="button" data-profile-kind="digital-creator">Digital creators <span id="profile-kind-creator-count">0</span></button><button type="button" data-profile-kind="regular-profile">Regular <span id="profile-kind-regular-count">0</span></button></nav>
+          <button id="people-filter-toggle" class="people-filter-toggle" type="button" aria-expanded="false"><i class="fa-solid fa-sliders"></i><span>Filters</span><b id="people-filter-count" hidden>0</b></button>
+          <input id="audience-filter" type="hidden" value="all">
+        </div>
+        <div id="people-active-filters" class="people-active-filters"></div>
+        <div id="people-filter-panel" class="people-attribute-filters" hidden>
+          <label>Type<select id="people-type-filter"><option value="all">All types</option><option value="digital-creator">Digital creator</option><option value="regular-profile">Regular profile</option><option value="creator">Any creator signal</option><option value="business">Business/Page</option><option value="personal">Personal profile</option><option value="unknown">Unknown</option></select></label>
+          <label>Country<select id="people-country-filter"><option value="all">All countries</option></select></label>
+          <label>Location<input id="people-location-filter" type="search" list="people-location-options" placeholder="City, state, or province"><datalist id="people-location-options"></datalist></label>
+          <label>Employment<select id="people-employment-filter"><option value="all">All employment</option><option value="self-employed">Self-employed / business owner</option><option value="employed">Works a job</option><option value="student">Student</option><option value="retired">Retired</option><option value="unemployed">Unemployed / looking</option><option value="homemaker">Homemaker / caregiver</option><option value="unknown">Not stated</option></select></label>
+          <label>Work details<input id="people-work-filter" type="search" list="people-work-options" placeholder="Company, job, or occupation"><datalist id="people-work-options"></datalist></label>
+          <label>Minimum age<input id="people-age-min" type="number" min="13" max="120" inputmode="numeric" placeholder="18"></label>
+          <label>Maximum age<input id="people-age-max" type="number" min="13" max="120" inputmode="numeric" placeholder="65"></label>
+          <label>Age / DOB<select id="people-dob-filter"><option value="all">Any age data</option><option value="known">Age or birthday found</option><option value="unknown">Age not found</option></select></label>
+          <label>Gender<select id="people-gender-filter"><option value="all">Any gender</option><option value="female">Female</option><option value="male">Male</option><option value="non-binary">Non-binary</option><option value="known">Any stated gender</option><option value="unknown">Not stated</option></select></label>
+          <label>Relationship<select id="people-relationship-filter"><option value="all">Any relationship status</option><option value="single">Single</option><option value="relationship">In a relationship</option><option value="engaged">Engaged</option><option value="married">Married</option><option value="complicated">It's complicated</option><option value="separated">Separated</option><option value="divorced">Divorced</option><option value="widowed">Widowed</option><option value="known">Any stated status</option><option value="unknown">Not stated</option></select></label>
+          <label>Verification<select id="people-verification-filter"><option value="all">Any verification state</option><option value="verified">Verified badge seen</option><option value="not-seen">Badge not seen</option><option value="unknown">Not checked</option></select></label>
+          <label>Minimum mutual friends<input id="people-mutual-min" type="number" min="0" max="10000" inputmode="numeric" placeholder="1"></label>
+          <label>Public links<select id="people-links-filter"><option value="all">Any link state</option><option value="creator-platform">Creator-platform link</option><option value="adult-platform">Adult-platform link</option><option value="review">Link needs review</option><option value="other">Other public link</option><option value="none">No external links found</option><option value="unknown">Not checked</option></select></label>
+        </div>
+        <p id="people-coverage" class="followers-notice">Loading coverage…</p>
+        <section class="top-engagers-strip"><header><div><p class="eyebrow">TOP ENGAGERS</p><h3>People keeping your page alive</h3></div><button id="top-engagers-open" type="button">Open top engagers</button></header><div id="top-engagers-strip-list" class="top-engagers-strip-list"></div></section>
+        <div id="audience-list" class="audience-list"></div>
+        <div class="people-load-row"><span id="people-render-note"></span><button id="people-load-more" type="button">Show 100 more</button></div>
+      </div>
+    </section>
+
+    <section id="comments" class="view">
+      <div class="section-head"><div><p class="eyebrow">COMMUNITY INBOX</p><h2>React and reply</h2></div><select id="comment-mode"><option value="review">Review every reply</option><option value="react">Auto-react, review replies</option><option value="safe">Auto-handle simple thanks</option></select></div>
+      <div id="comment-summary" class="queue-summary"></div>
+      <p class="view-note">The watcher drafts contextual replies to comments on your Page. Short education requests such as FB or CMI receive a useful lesson instead of a generic thank-you. Group questions appear as value opportunities; approve or copy a reply, then Social Desk requires the exact Facebook target and visible posting proof.</p>
+      <div id="comment-list" class="comment-list"></div>
+      <div id="engagement-assist-results" class="queue-list"></div>
+    </section>
+
+    <section id="published-comments" class="view">
+      <div class="section-head"><div><p class="eyebrow">POST-PUBLISH FOLLOW-UP</p><h2>Add the next comment after a post is live</h2></div></div>
+      <section class="ai-nightly-lane" aria-labelledby="ai-nightly-lane-title">
+        <header>
+          <div><p class="eyebrow">CI · CREATOR INTELLIGENCE</p><h3 id="ai-nightly-lane-title">Research becomes original AI night drafts</h3><p>CI deeply scans two creator sources per day, stores useful patterns, then Ryzen converts selected research into original Built Not Begged drafts. Research discoveries and generated drafts are separate counts; posts and first comments stay approval-gated.</p></div>
+          <button id="ai-nightly-request" type="button">Request tonight's drafts</button>
+        </header>
+        <form id="ai-nightly-form">
+          <label>Night date<input id="ai-nightly-date" type="date" required></label>
+          <label>9 PM slot<input name="slot" type="time" value="21:00" required></label>
+          <label>11 PM slot<input name="slot" type="time" value="23:00" required></label>
+          <label>1 AM slot<input name="slot" type="time" value="01:00" required></label>
+          <label>3 AM slot<input name="slot" type="time" value="03:00" required></label>
+          <label>Optional fifth<input name="slot" type="time"></label>
+          <button type="submit">Save times</button>
+        </form>
+        <p id="ai-nightly-status" class="view-note">Loading the Ryzen night lane…</p>
+        <div id="ai-nightly-requests" class="ai-nightly-requests" aria-live="polite"></div>
+      </section>
+      <p class="view-note">Prepare a first comment before airtime and approve it separately. Social Desk never submits the comment silently: it releases only your explicitly approved comment after the exact owned Facebook Page post is confirmed live; personal-profile posts remain copy-and-open.</p>
+      <div id="published-comment-summary" class="queue-summary"></div>
+      <div id="published-comment-list" class="published-comment-list" aria-live="polite"></div>
+    </section>
+
+    <section id="media-library" class="view">
+      <div class="section-head media-page-head"><div><p class="eyebrow">DRAFT MEDIA DESK</p><h2>Landscape and Story review</h2><p>Review the actual artwork first. Approve the pair or mark only the role that needs another pass.</p></div></div>
+      <div class="prompt-tools"><button type="button" class="media-subtab active" data-media-filter="drafts">Draft media</button><button type="button" class="media-subtab" data-media-filter="archives">Ryzen archive</button></div>
+      <section id="media-drafts-panel">
+        <p id="media-review-status" class="view-note" role="status">Landscape and Story companions stay together. A QC note preserves the current image as reference and queues only that role.</p>
+        <div id="media-draft-summary" class="queue-summary"></div>
+        <section class="daily-cover-review" aria-labelledby="daily-cover-review-title">
+          <header><div><p class="eyebrow">WEEKLY DISPLAY CASE</p><h3 id="daily-cover-review-title">Every day becomes a magazine cover</h3></div><p>The latest seven saved daily issues stay together as one visual week.</p></header>
+          <div id="daily-cover-list" class="daily-cover-list" aria-live="polite"></div>
+        </section>
+        <div id="media-draft-pagination-top"></div>
+        <div id="media-draft-list" class="queue-list"></div>
+        <div id="media-draft-pagination-bottom"></div>
+        <details class="media-production-tools">
+          <summary><span><strong>Production tools</strong><small>Prompts, cartoon styles, and daily issue covers</small></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
+          <div class="media-production-tools-body">
+            <section class="image-prompt-workbench" aria-labelledby="image-prompt-workbench-title">
+              <header><div><p class="eyebrow">IMAGE PROMPT QUEUE</p><h3 id="image-prompt-workbench-title">Hourly images and QC redos</h3></div><p>Copy the next required prompt here, or use the clearly labeled copy button on any Landscape or Story above.</p></header>
+              <div id="image-prompt-summary" class="image-prompt-summary"></div>
+              <div id="image-prompt-next" class="image-prompt-next"></div>
+              <div id="image-prompt-job-list" class="image-prompt-job-list" aria-live="polite"></div>
+            </section>
+            <section class="style-library" aria-labelledby="style-library-title">
+              <header><div><p class="eyebrow">CARTOON STYLE LIBRARY</p><h3 id="style-library-title">Use a different visual world each day</h3></div><p>Built-in and custom styles are date-safe. Assigning a style changes that issue's prompts without reshuffling older dates or removing current images.</p></header>
+              <div id="style-library-list" class="style-library-list" aria-live="polite"></div>
+              <form id="style-library-form" class="style-library-form">
+                <label>Style name<input name="label" maxlength="80" placeholder="Example: Ink-Wash Adventure Comic" required></label>
+                <label>Visual direction<textarea name="direction" maxlength="800" rows="3" placeholder="Describe medium, linework, palette, lighting, mood, and composition. Keep it original." required></textarea></label>
+                <label>Use first on date<select name="publishDate" id="style-library-date"><option value="">Add to library only</option></select></label>
+                <button type="submit">Add cartoon style</button>
+              </form>
+              <p id="style-library-status" class="style-library-status" role="status"></p>
+            </section>
+          </div>
+        </details>
+      </section>
+      <section id="media-archives-panel" hidden>
+        <p class="view-note">All 25 official Meta ZIP parts are preserved as one source set. Files 13 and 19 repeat the same extracted payload; that is an expected source overlap, not a missing download. Reuse remains review-only.</p>
+        <section class="archive-remix-workbench" aria-labelledby="archive-remix-title">
+          <header><div><p class="eyebrow">FACEBOOK ARCHIVE REMIX</p><h3 id="archive-remix-title">Find the older ideas worth rebuilding</h3></div><p>Review separate lanes for Built Not Begged and Matthew’s personal profile. Every candidate still needs a new angle, current context, rights review, and—when it is a reel—a genuinely changed video.</p></header>
+          <div id="archive-remix-summary" class="queue-summary"></div>
+          <div class="archive-remix-toolbar">
+            <div class="archive-remix-filters" role="group" aria-label="Archive remix filters">
+              <button type="button" class="active" data-archive-remix-filter="recommended">Recommended</button>
+              <button type="button" data-archive-remix-filter="shortlist">Shortlisted</button>
+              <button type="button" data-archive-remix-filter="engagement">Engagement winners</button>
+              <button type="button" data-archive-remix-filter="fan-page">Fan page</button>
+              <button type="button" data-archive-remix-filter="personal-profile">Personal profile</button>
+              <button type="button" data-archive-remix-filter="reels">All reels</button>
+              <button type="button" data-archive-remix-filter="posts">Text posts</button>
+              <button type="button" data-archive-remix-filter="rights">Rights review</button>
+              <button type="button" data-archive-remix-filter="skip">Skipped</button>
+            </div>
+            <label>Search archive<input id="archive-remix-search" type="search" placeholder="creator, business, trucking, humor…"></label>
+          </div>
+          <p class="archive-remix-policy"><strong>No automatic publishing and no automatic deletion.</strong> Keep the archived source until the replacement passes visual, audio, privacy, and ownership review.</p>
+          <p id="archive-remix-count" class="view-note">Loading archive candidates…</p>
+          <div id="archive-remix-list" class="archive-remix-list" aria-live="polite"></div>
+          <button id="archive-remix-more" class="archive-remix-more" type="button" hidden>Show 24 more</button>
+        </section>
+        <details class="archive-part-inventory">
+          <summary>Show the 25-ZIP source inventory</summary>
+        <div id="media-summary" class="queue-summary"></div>
+        <div id="media-archives" class="queue-list"></div>
+        </details>
+      </section>
+    </section>
+    <dialog id="media-qc-dialog" class="media-qc-dialog">
+      <form method="dialog" id="media-qc-form">
+        <header><div><p class="eyebrow">IMAGE QUALITY CONTROL</p><h3 id="media-qc-title">What needs to change?</h3></div><button type="submit" value="cancel" aria-label="Close quality control">Close</button></header>
+        <p>Select every problem that applies. The current image stays visible as the regeneration reference.</p>
+        <div class="media-qc-options">
+          <label><input type="checkbox" value="Bad or misspelled text">Bad or misspelled text</label>
+          <label><input type="checkbox" value="Wrong concept — does not match the post">Wrong concept / does not match the post</label>
+          <label><input type="checkbox" value="Lost the comic-book concept — looks like a generic poster">Lost comic-book concept / generic poster</label>
+          <label><input type="checkbox" value="Does not match this day's Daily Series cover or issue style">Does not match the day's cover/style</label>
+          <label><input type="checkbox" value="Doesn't look like Matthew Murphy">Doesn't look like Matthew</label>
+          <label><input type="checkbox" value="Bad body parts or anatomy">Bad body parts / anatomy</label>
+          <label><input type="checkbox" value="Matthew Murphy signature is missing, joined, misspelled, or misplaced">Signature wrong or missing</label>
+          <label><input type="checkbox" value="Brand colors or visual identity are wrong">Brand/style identity is wrong</label>
+          <label><input type="checkbox" value="Weak layout, composition, or focal point">Weak layout / composition</label>
+          <label><input type="checkbox" value="Crop or safe-area problem">Crop / safe-area problem</label>
+          <label><input type="checkbox" value="Too much text or hard to read">Too much text / hard to read</label>
+          <label><input type="checkbox" value="Duplicate or repetitive visual concept">Duplicate / repetitive concept</label>
+        </div>
+        <label class="media-qc-details">Other details<textarea id="media-qc-details" rows="3" placeholder="Add a specific correction if needed"></textarea></label>
+        <p id="media-qc-error" class="media-qc-error" role="alert"></p>
+        <footer><button type="submit" value="cancel">Cancel</button><button type="button" id="media-qc-save">Save QC reasons</button></footer>
+      </form>
+    </dialog>
+  </main>
+  <script type="module" src="/app.js?v=29"></script>
+</body>
+</html>

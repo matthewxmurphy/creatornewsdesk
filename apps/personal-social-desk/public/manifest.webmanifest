@@ -1,0 +1,22 @@
+{
+  "name": "Creator Publishing Hub: Social Desk",
+  "short_name": "Social Desk",
+  "id": "/",
+  "description": "Approval, audience, and community workspace for Creator Publishing Hub.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f0f2f5",
+  "theme_color": "#ffffff",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Work now", "short_name": "Work now", "description": "Review the approval feed", "url": "/?view=queue" },
+    { "name": "Compose", "short_name": "Compose", "description": "Create a new post", "url": "/?view=compose" },
+    { "name": "Stories", "short_name": "Stories", "description": "Open Story drafts", "url": "/?view=stories" },
+    { "name": "All followers", "short_name": "Followers", "description": "Open the follower roster", "url": "/?view=people" },
+    { "name": "Follower statistics", "short_name": "Statistics", "description": "Open audience marketing statistics", "url": "/?view=people&panel=stats" }
+  ]
+}

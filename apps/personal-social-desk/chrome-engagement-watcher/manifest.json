@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "CPH · Engagement Watcher",
+  "version": "1.0.13",
+  "description": "Five-minute, proof-backed Facebook comment reply, birthday, and approved group distribution worker for Social Desk.",
+  "permissions": ["alarms", "debugger", "storage", "tabs"],
+  "host_permissions": [
+    "https://www.facebook.com/*",
+    "https://m.facebook.com/*",
+    "http://127.0.0.1:4178/*",
+    "http://127.0.0.1:4180/*",
+    "http://localhost:4178/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.facebook.com/*", "https://m.facebook.com/*"],
+      "js": ["birthday-facts.js", "birthday-wishes.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "CPH · Engagement Watcher"
+  }
+}
