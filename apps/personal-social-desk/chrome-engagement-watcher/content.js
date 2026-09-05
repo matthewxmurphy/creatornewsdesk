@@ -18,7 +18,7 @@ function visible(element) {
 function canonicalFacebookUrl(value = '') {
   try {
     const url = new URL(String(value || ''), location.href);
-    if (!['facebook.com', 'www.facebook.com', 'm.facebook.com'].includes(url.hostname)) return '';
+    if (!['facebook.com', 'www.facebook.com', 'm.facebook.com', 'business.facebook.com'].includes(url.hostname)) return '';
     url.protocol = 'https:';
     url.hostname = 'www.facebook.com';
     url.hash = '';
@@ -389,26 +389,53 @@ function commentContainers() {
 }
 
 function commentTextFrom(container, actorName) {
-  const lines = String(container.innerText || '').split(/\n+/).map(clean).filter(Boolean);
-  const ignored = /^(?:like|reply|share|edited|author|top fan|follow|message|see translation|hide|report|\d+[hmdwy])$/i;
+  const clone = container.cloneNode(true);
+  for (const nested of clone.querySelectorAll('[role="article"]')) nested.remove();
+  const lines = String(clone.innerText || clone.textContent || '').split(/\n+/).map(clean).filter(Boolean);
+  const ignored = /^(?:like|reply|share|edited|author|top fan|follow|message|send message|see translation|hide|report|\d+[hmdwy])$/i;
   return lines.filter((line) => line !== actorName && !ignored.test(line) && !/^\d+\s*(?:repl|like|reaction)/i.test(line)).join(' ').slice(0, 600);
 }
 
-async function captureOwnedComments(pageUrl = '') {
+function containsMatthewReply(container) {
+  const policy = globalThis.SocialDeskCommentCapturePolicy;
+  return [...container.querySelectorAll('[role="article"][aria-label]')]
+    .some((article) => policy?.isMatthewCommentAria(article.getAttribute('aria-label')));
+}
+
+function commentActorName(container, actor = null) {
+  const linkedName = clean(actor?.textContent || actor?.getAttribute?.('aria-label')).replace(/\s+verified account$/i, '').slice(0, 160);
+  if (linkedName) return linkedName;
+  const aria = clean(container?.getAttribute?.('aria-label'));
+  return aria.replace(/^comment by\s+/i, '')
+    .replace(/\s+(?:an?|\d+)\s+(?:seconds?|minutes?|hours?|days?|weeks?|months?|years?)\s+ago$/i, '')
+    .slice(0, 160);
+}
+
+function exactCommentId(postUrl = '') {
+  try {
+    const url = new URL(postUrl);
+    return clean(url.searchParams.get('comment_id') || url.searchParams.get('reply_comment_id') || '');
+  } catch {
+    return '';
+  }
+}
+
+async function extractVisibleOwnedComments(pageUrl = '') {
   const comments = [];
   const seen = new Set();
   for (const container of commentContainers()) {
+    if (containsMatthewReply(container)) continue;
     const actor = exactProfileAnchor(container);
-    if (!actor) continue;
-    const actorName = clean(actor.textContent || actor.getAttribute('aria-label')).replace(/\s+verified account$/i, '').slice(0, 160);
+    const actorName = commentActorName(container, actor);
     if (!actorName || /matthew murphy|built not begged/i.test(actorName)) continue;
-    const actorUrl = canonicalFacebookUrl(actor.href);
+    const actorUrl = canonicalFacebookUrl(actor?.href || '');
     const actorId = facebookId(actorUrl);
     const commentText = commentTextFrom(container, actorName);
     const post = owningPostContainer(container);
     const postUrl = postPermalink(post);
-    if (!commentText || !postUrl || !isOwnedPostUrl(postUrl, pageUrl) || (!actorId && !actorUrl)) continue;
-    const commentKey = `owned:${await digestKey(`${postUrl}|${actorId || actorUrl}|${commentText}`)}`;
+    const commentId = exactCommentId(postUrl);
+    if (!commentText || !postUrl || !isOwnedPostUrl(postUrl, pageUrl) || (!commentId && !actorId && !actorUrl)) continue;
+    const commentKey = `owned:${await digestKey(`${postUrl}|${commentId || actorId || actorUrl}|${commentText}`)}`;
     if (seen.has(commentKey)) continue;
     seen.add(commentKey);
     comments.push({
@@ -417,6 +444,7 @@ async function captureOwnedComments(pageUrl = '') {
       actorId,
       actorUrl,
       actorName,
+      commentId,
       commentText,
       postContext: renderedPostContext(post),
       postUrl,
@@ -425,7 +453,105 @@ async function captureOwnedComments(pageUrl = '') {
       capturedAt: new Date().toISOString(),
     });
   }
-  return { comments, capturedAt: new Date().toISOString() };
+  return comments;
+}
+
+function commentControlLabel(node) {
+  return clean(node?.getAttribute?.('aria-label') || node?.innerText || node?.textContent || '');
+}
+
+function visibleCommentControls(predicate, scope = document) {
+  return [...scope.querySelectorAll('[role="button"], button, [role="menuitem"], [role="option"]')]
+    .filter((node) => visible(node) && predicate(commentControlLabel(node)));
+}
+
+async function selectUnansweredCommentsInManager() {
+  const policy = globalThis.SocialDeskCommentCapturePolicy;
+  if (!policy?.isCommentsManagerUrl(location.href)) return { attempted: false, selected: false };
+  if (policy.isBusinessCommentsUrl(location.href)) return { attempted: false, selected: true };
+
+  const activeFilter = visibleCommentControls(policy.isResponseFilterLabel)
+    .find((node) => node.getAttribute('role') === 'button' || node.tagName === 'BUTTON');
+  if (activeFilter && policy.isUnansweredCommentsLabel(commentControlLabel(activeFilter))) {
+    return { attempted: false, selected: true };
+  }
+  if (!activeFilter) return { attempted: false, selected: false };
+  activeFilter.click();
+  const unansweredOption = await waitFor(() => visibleCommentControls(policy.isUnansweredCommentsLabel)
+    .find((node) => node.getAttribute('role') === 'menuitemradio' || node.getAttribute('role') === 'option'), 8_000);
+  if (!unansweredOption) return { attempted: true, selected: false };
+  if (unansweredOption.getAttribute('aria-checked') !== 'true') unansweredOption.click();
+  await new Promise((resolve) => setTimeout(resolve, 1_500));
+  return { attempted: true, selected: true };
+}
+
+function commentScrollTarget() {
+  const candidates = [document.scrollingElement, document.querySelector('[role="main"]'), ...document.querySelectorAll('[role="feed"], main')]
+    .filter(Boolean);
+  return candidates.sort((left, right) => (right.scrollHeight - right.clientHeight) - (left.scrollHeight - left.clientHeight))[0]
+    || document.scrollingElement;
+}
+
+function atCommentScrollEnd(target) {
+  if (!target) return true;
+  return target.scrollTop + target.clientHeight >= target.scrollHeight - 80;
+}
+
+async function captureCommentsManager(pageUrl = '') {
+  const policy = globalThis.SocialDeskCommentCapturePolicy;
+  const filter = await selectUnansweredCommentsInManager();
+  const comments = new Map();
+  const expandedLabels = [];
+  let stableRounds = 0;
+  let rounds = 0;
+
+  while (rounds < 24 && stableRounds < 3) {
+    rounds += 1;
+    const before = comments.size;
+    for (const comment of await extractVisibleOwnedComments(pageUrl)) comments.set(comment.commentKey, comment);
+
+    const expanders = visibleCommentControls(policy.isCommentExpansionLabel).slice(0, 20);
+    for (const control of expanders) {
+      expandedLabels.push(commentControlLabel(control));
+      control.click();
+    }
+    if (expanders.length) await new Promise((resolve) => setTimeout(resolve, 700));
+
+    const target = commentScrollTarget();
+    const wasAtEnd = atCommentScrollEnd(target);
+    if (target && !wasAtEnd) target.scrollTo({ top: Math.min(target.scrollTop + Math.max(target.clientHeight * 0.85, 700), target.scrollHeight), behavior: 'instant' });
+    await new Promise((resolve) => setTimeout(resolve, 850));
+    for (const comment of await extractVisibleOwnedComments(pageUrl)) comments.set(comment.commentKey, comment);
+
+    const noGrowth = comments.size === before;
+    stableRounds = noGrowth && atCommentScrollEnd(target) && expanders.length === 0 ? stableRounds + 1 : 0;
+  }
+
+  return {
+    comments: [...comments.values()],
+    coverage: {
+      source: 'comments-manager',
+      surface: policy.isBusinessCommentsUrl(location.href) ? 'meta-business-suite-page-comments' : 'professional-dashboard-profile-comments',
+      filterAttempted: filter.attempted,
+      unansweredOnlySelected: filter.selected,
+      rounds,
+      expandedControls: expandedLabels.length,
+      stable: stableRounds >= 3,
+    },
+  };
+}
+
+async function captureOwnedComments(pageUrl = '') {
+  const policy = globalThis.SocialDeskCommentCapturePolicy;
+  if (policy?.isCommentsManagerUrl(location.href)) {
+    const result = await captureCommentsManager(pageUrl);
+    return { ...result, capturedAt: new Date().toISOString() };
+  }
+  return {
+    comments: await extractVisibleOwnedComments(pageUrl),
+    coverage: { source: 'rendered-page', stable: true },
+    capturedAt: new Date().toISOString(),
+  };
 }
 
 function setEditableText(editable, value) {

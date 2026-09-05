@@ -1220,6 +1220,26 @@ function archiveMediaUrl(path, type) {
   return path ? `/api/media?path=${encodeURIComponent(path)}&type=${encodeURIComponent(type || 'application/octet-stream')}` : '';
 }
 
+function renderPersonalArchivePlan(plan = {}) {
+  const items = plan.items || [];
+  $('#personal-archive-plan-status').textContent = items.length
+    ? `${items.length} planned drafts · Matthew Murphy personal profile · Needs review`
+    : 'No posts planned yet. Generate and shortlist a new angle from an older text post to make it eligible.';
+  $('#personal-archive-plan-list').innerHTML = items.map((item) => `<article class="archive-remix-result"><p class="eyebrow">PROPOSED · ${escape(new Date(item.proposedFor).toLocaleString('en-US', { timeZone: 'America/Chicago', dateStyle: 'medium', timeStyle: 'short' }))} CENTRAL · NEEDS REVIEW</p><h4>${escape(item.title)}</h4><p>${escape(item.caption).replace(/\n/g, '<br>')}</p><details><summary>Original post and review notes</summary><p>${escape(item.originalAt?.slice(0, 10))} · ${escape(item.originalCaption)}</p><ul>${[...(item.editPlan || []), ...(item.rightsChecklist || [])].map((line) => `<li>${escape(line)}</li>`).join('')}</ul></details></article>`).join('');
+}
+
+$('#personal-archive-plan-build')?.addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  $('#personal-archive-plan-status').textContent = 'Planning older posts…';
+  try {
+    const plan = await json('/api/archive-remix/personal-plan', { method: 'POST', body: JSON.stringify({ target: 'matthew-profile' }) });
+    renderPersonalArchivePlan(plan);
+  } catch (error) {
+    $('#personal-archive-plan-status').textContent = error.message;
+  } finally { button.disabled = false; }
+});
+
 function archiveRemixMatches(candidate) {
   const state = candidate.review?.state || 'review';
   const destinationIds = (candidate.destinations || []).map((lane) => typeof lane === 'string' ? lane : lane.id);
@@ -1765,6 +1785,7 @@ json('/api/audience').then((data) => { audience = data; renderPeopleFilterOption
 json('/api/audience-reports').then(renderAudienceReports);
 json('/api/media-index').then(renderMediaIndex);
 json('/api/archive-remix').then(renderArchiveRemix).catch(() => renderArchiveRemix());
+json('/api/archive-remix/personal-plan').then(renderPersonalArchivePlan).catch((error) => { $('#personal-archive-plan-status').textContent = error.message; });
 json('/api/comments').then((data) => { comments = data; $('#comment-mode').value = data.mode || 'review'; renderComments(); });
 $('#comment-mode').addEventListener('change', async (event) => { comments = await json('/api/comments/settings', { method: 'PATCH', body: JSON.stringify({ mode: event.target.value }) }); renderComments(); });
 $('#comment-list').addEventListener('click', async (event) => { const button = event.target.closest('[data-comment-action]'); if (!button) return; const card = button.closest('[data-comment-id]'); comments = await json(`/api/comments/${card.dataset.commentId}`, { method: 'PATCH', body: JSON.stringify({ action: button.dataset.commentAction }) }); renderComments(); });
@@ -1779,4 +1800,5 @@ window.setInterval(loadScanProgress, 300000);
 const initialParams = new URLSearchParams(window.location.search);
 if (initialParams.get('view')) openView(initialParams.get('view'));
 if (initialParams.get('panel') === 'stats') showPeoplePanel('stats');
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=46').then((registration) => registration.update());
+if (initialParams.get('panel') === 'archives') setMediaView('archives');
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js?v=47').then((registration) => registration.update());

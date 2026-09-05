@@ -1,12 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "CPH · Engagement Watcher",
-  "version": "1.0.13",
-  "description": "Five-minute, proof-backed Facebook comment reply, birthday, and approved group distribution worker for Social Desk.",
-  "permissions": ["alarms", "debugger", "storage", "tabs"],
+  "name": "CPH \u00b7 Engagement Watcher",
+  "version": "1.0.17",
+  "description": "Facebook engagement worker and review-only personal-profile archive content planner.",
+  "permissions": [
+    "alarms",
+    "debugger",
+    "storage",
+    "tabs"
+  ],
   "host_permissions": [
     "https://www.facebook.com/*",
     "https://m.facebook.com/*",
+    "https://business.facebook.com/*",
     "http://127.0.0.1:4178/*",
     "http://127.0.0.1:4180/*",
     "http://localhost:4178/*"
@@ -16,12 +22,22 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.facebook.com/*", "https://m.facebook.com/*"],
-      "js": ["birthday-facts.js", "birthday-wishes.js", "content.js"],
+      "matches": [
+        "https://www.facebook.com/*",
+        "https://m.facebook.com/*",
+        "https://business.facebook.com/*"
+      ],
+      "js": [
+        "birthday-facts.js",
+        "birthday-wishes.js",
+        "comment-capture-policy.js",
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ],
   "action": {
-    "default_title": "CPH · Engagement Watcher"
+    "default_title": "CPH \u00b7 Engagement Watcher",
+    "default_popup": "popup.html"
   }
 }

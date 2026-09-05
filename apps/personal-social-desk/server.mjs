@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import { buildPersonalArchivePlan } from './lib/personal-archive-plan.mjs';
 import { readFile, writeFile, rename, mkdir, mkdtemp, rm, stat, readdir } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
@@ -219,6 +220,8 @@ const aiCommentSettingsFile = join(dataDir, 'ai-comment-settings.json');
 const commentsFile = join(dataDir, 'comments.json');
 const mediaIndexFile = join(dataDir, 'facebook-media-index.json');
 const facebookRemixLibraryFile = join(dataDir, 'facebook-remix-library.json');
+const personalArchivePlanFile = join(dataDir, 'personal-archive-plan.json');
+let personalArchivePlanPromise = null;
 const creatorTipArticleDraftsFile = join(dataDir, 'creator-tip-article-drafts.json');
 const performanceLogFile = join(dataDir, 'performance-log.json');
 const publishingMetricsFile = join(dataDir, 'publishing-metrics.json');
@@ -7532,6 +7535,35 @@ async function api(req, res, url) {
       updatedDrafts: move.length,
       protectedSkipped,
     });
+  }
+  if (url.pathname === '/api/archive-remix/personal-plan' && req.method === 'GET') {
+    return send(res, 200, await readJson(personalArchivePlanFile).catch((error) => {
+      if (error.code !== 'ENOENT') throw error;
+      return { items: [], target: 'matthew-profile' };
+    }));
+  }
+  if (url.pathname === '/api/archive-remix/personal-plan' && req.method === 'POST') {
+    const payload = await bodyJson(req);
+    if (payload.target !== 'matthew-profile') return send(res, 400, { error: 'This plan is for Matthew Murphy personal profile.' });
+    if (!personalArchivePlanPromise) {
+      personalArchivePlanPromise = (async () => {
+        const [library, plan, queue, scheduled] = await Promise.all([
+          readJson(facebookRemixLibraryFile),
+          readJson(personalArchivePlanFile).catch((error) => {
+            if (error.code !== 'ENOENT') throw error;
+            return { items: [] };
+          }),
+          readJson(queueFile),
+          readJson(scheduledContentLedgerFile),
+        ]);
+        const result = buildPersonalArchivePlan({ library, plan, occupied: [...(queue.items || []), ...(scheduled.items || [])] });
+        result.lastPlanningCheckAt = new Date().toISOString();
+        result.lastPlanningClient = req.headers['x-social-desk-client'] === 'engagement-watcher' ? 'engagement-watcher' : 'social-desk';
+        await writeJson(personalArchivePlanFile, result);
+        return result;
+      })().finally(() => { personalArchivePlanPromise = null; });
+    }
+    return send(res, 200, await personalArchivePlanPromise);
   }
   if (url.pathname === '/api/archive-remix' && req.method === 'GET') {
     const library = await readJson(facebookRemixLibraryFile).catch(() => ({

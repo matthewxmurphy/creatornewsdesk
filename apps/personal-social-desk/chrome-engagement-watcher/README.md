@@ -15,3 +15,5 @@ Every five minutes it:
 Load this directory as an unpacked extension in the Chrome profile signed into Matthew's Facebook account. The local `127.0.0.1:4178` tunnel must resolve to the Ryzen Social Desk owner before the extension is enabled.
 
 Birthday capture and wishing use `/friends/birthdays`. The extension keeps a dedicated background tab open only while the bounded daily birthday pass is active, records each attempt before clicking, and never repeats an attempted wish automatically.
+
+Personal archive planning: the normal cycle and toolbar popup ask Social Desk to fill a maximum of seven outstanding personal-profile review slots. Only older shortlisted text posts with real rewritten captions are eligible; source IDs are deduplicated. Proposed dates live in a separate planning ledger and never count as Facebook scheduling. Review in Media → Archives. The existing birthday alarm continues unchanged.

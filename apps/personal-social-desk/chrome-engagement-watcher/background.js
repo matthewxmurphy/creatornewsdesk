@@ -15,6 +15,13 @@ const TAB_MESSAGE_TIMEOUT_MS = 75_000;
 let runPromise = null;
 let birthdayRunPromise = null;
 
+function activeCycleKeepAlive() {
+  const pulse = () => chrome.runtime.getPlatformInfo().catch(() => {});
+  pulse();
+  const timer = setInterval(pulse, 15_000);
+  return () => clearInterval(timer);
+}
+
 function withTimeout(promise, timeoutMs, label) {
   let timer = null;
   return Promise.race([
@@ -180,10 +187,12 @@ async function captureOwnedComments(feed) {
   let captured = 0;
   let drafted = 0;
   const errors = [];
+  const coverage = [];
   for (const url of (feed.page?.scanUrls || []).slice(0, 8)) {
     const tab = await taskTab(url);
     const result = await tabMessage(tab.id, { type: 'CPH_CAPTURE_OWNED_COMMENTS', pageUrl: feed.page.url });
-    for (const candidate of (result?.comments || []).slice(0, 100)) {
+    coverage.push({ url, ...(result?.coverage || {}) });
+    for (const candidate of (result?.comments || []).slice(0, 500)) {
       captured += 1;
       try {
         const response = await socialDesk('/api/comment-reply-draft', { method: 'POST', body: JSON.stringify(candidate) });
@@ -193,7 +202,7 @@ async function captureOwnedComments(feed) {
       }
     }
   }
-  return { captured, drafted, errors: errors.slice(0, 10) };
+  return { captured, drafted, coverage, errors: errors.slice(0, 10) };
 }
 
 async function submitPreparedReply(tabId, replyText) {
@@ -298,12 +307,18 @@ async function publishApprovedGroupTask(feed) {
 
 async function runHourly({ forceBirthdays = false } = {}) {
   if (runPromise) return runPromise;
+  const stopKeepAlive = activeCycleKeepAlive();
   runPromise = (async () => {
     const startedAt = new Date().toISOString();
     let stage = 'load-feed';
     try {
       await saveState({ activeRunStartedAt: startedAt, lastStage: stage });
       let feed = await socialDesk('/api/extension/hourly-feed');
+      // Planning has no Facebook side effects and must not block existing jobs.
+      const archivePlan = await socialDesk('/api/archive-remix/personal-plan', {
+        method: 'POST', body: JSON.stringify({ target: 'matthew-profile' }),
+      }).then((plan) => ({ planned: plan.items.length, created: plan.created }))
+        .catch((error) => ({ error: error.message }));
       stage = 'birthdays';
       const birthdays = await runBirthdayCycle({ force: forceBirthdays, feed });
       stage = 'comments';
@@ -321,7 +336,7 @@ async function runHourly({ forceBirthdays = false } = {}) {
         activeRunStartedAt: '',
         lastError: '',
         lastStage: 'complete',
-        lastSummary: { birthdays, comments, replies: replies.length, group: group?.skipped ? 'none-due' : 'confirmed' },
+        lastSummary: { archivePlan, birthdays, comments, replies: replies.length, group: group?.skipped ? 'none-due' : 'confirmed' },
       });
     } catch (error) {
       await saveState({
@@ -334,7 +349,10 @@ async function runHourly({ forceBirthdays = false } = {}) {
       });
       throw error;
     }
-  })().finally(() => { runPromise = null; });
+  })().finally(() => {
+    stopKeepAlive();
+    runPromise = null;
+  });
   return runPromise;
 }
 
@@ -359,6 +377,13 @@ async function initializeBirthdayWorker() {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type === 'cph-plan-personal-archive') {
+    if (sender.id !== chrome.runtime.id || !String(sender.url || '').startsWith(chrome.runtime.getURL(''))) return false;
+    socialDesk('/api/archive-remix/personal-plan', { method: 'POST', body: JSON.stringify({ target: 'matthew-profile' }) })
+      .then((plan) => sendResponse({ ok: true, planned: plan.items.length, created: plan.created, url: `${socialDeskRoot}/?view=media-library&panel=archives` }))
+      .catch((error) => sendResponse({ ok: false, error: error.message }));
+    return true;
+  }
   if (message?.type === 'SOCIAL_DESK_BIRTHDAY_WISH_AUDIT') {
     recordBirthdayWish(message.wish).then((saved) => sendResponse({ ok: true, ...saved })).catch(async (error) => {
       await saveState({ lastBirthdayWishError: String(error?.message || error), lastBirthdayWishAttemptAt: new Date().toISOString() }).catch(() => {});
