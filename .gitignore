@@ -1,0 +1,10 @@
+# Only reviewed first-party add-on source belongs on this independent checkpoint.
+.env*
+config.json
+*.zip
+*.sql
+node_modules/
+vendor/
+uploads/
+backups/
+__pycache__/
