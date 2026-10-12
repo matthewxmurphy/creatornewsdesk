@@ -1,6 +1,7 @@
 <?php
 /**
  * Plugin Name:       CND Auto Publisher
+ * Update URI: https://updates.builtnotbegged.com/products/cnd-auto-publisher
  * Plugin URI:        https://www.creatornewsdesk.com
  * Description:      Publishes one draft post every X minutes if it has a featured image and SEO metadata
  * Version: 2026.10.05.001

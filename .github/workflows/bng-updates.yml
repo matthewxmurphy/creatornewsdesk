@@ -1,0 +1,26 @@
+# Copyright (c) 2026 Matthew X Murphy (MatthewxMurphy.com).
+# Author: Matthew X Murphy <https://MatthewxMurphy.com>
+# Product/support: https://builtnotbegged.com
+# SPDX-License-Identifier: GPL-2.0-or-later
+name: WordPress update integration
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  enrollment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 scripts/check_bng_updates.py check --root .
+      - run: python3 -m unittest discover -s tests -p test_check_bng_updates.py -v
+      - name: Lint declared PHP entrypoints without loading products
+        run: |
+          python3 - <<'PYCODE'
+          import json, subprocess
+          for component in json.load(open('bng-updates.json'))['components']:
+              if component['source'].endswith('.php'):
+                  subprocess.run(['php', '-l', component['source']], check=True)
+          PYCODE

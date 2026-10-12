@@ -1,6 +1,7 @@
 <?php
 /**
  * Plugin Name: CND Tip Form
+ * Update URI: https://updates.builtnotbegged.com/products/cnd-tip-form
  * Description: Simple tip submission form handler
  * Version: 2026.10.05.001
   * Author: MatthewxMurphy.com
