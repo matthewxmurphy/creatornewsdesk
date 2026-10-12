@@ -1,6 +1,7 @@
 <?php
 /**
  * Plugin Name:       CND Article Feed
+ * Update URI: https://updates.builtnotbegged.com/products/cnd-article-feed
  * Plugin URI:        https://www.creatornewsdesk.com
  * Description:       Provides a JSON feed endpoint for the Creator Newsdesk pipeline to check article status
  * Version: 2026.10.05.001
