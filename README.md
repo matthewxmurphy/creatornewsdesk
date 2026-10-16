@@ -283,3 +283,7 @@ MIT License - see LICENSE file
 - Brave API for news search
 - WordPress and WPGraphQL
 - OpenClaw, ComfyUI, and A1111 for image generation
+
+## Security maintenance
+
+See [security boundaries, configuration and tests](docs/SECURITY-BOUNDARIES.md).

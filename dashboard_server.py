@@ -21,14 +21,18 @@ License: MIT
 import json
 import os
 import requests
+import hmac
+import tempfile
+from pathlib import Path
+from urllib.parse import urlsplit
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from datetime import datetime
 import threading
 import time
 
 # File paths for status and configuration
-STATUS_FILE = "pipeline_status.json"
-CONFIG_FILE = "config.json"
+STATUS_FILE = os.environ.get("CND_STATUS_FILE", "pipeline_status.json")
+CONFIG_FILE = os.environ.get("CND_CONFIG_FILE", "config.json")
 
 # Default status returned when no status file exists
 # Used to track pipeline execution state
@@ -74,6 +78,44 @@ def save_status(data):
     json.dump(data, open(STATUS_FILE, "w"), indent=2)
 
 
+# Copyright (c) 2026 Matthew X Murphy — https://MatthewxMurphy.com
+# Product: https://builtnotbegged.com — SPDX-License-Identifier: MIT
+# Static routing is deliberately separate from the working/configuration directory.
+PUBLIC_ROOT = Path(__file__).resolve().parent
+PUBLIC_FILES = {"dashboard.html", "chart.umd.min.js", "CreatorNewsdesk-Cover.png", "CreatorNewsdesk.png",
+    "creatornewsdesk-favicon-512.png", "creatornewsdesk-fb-cover-1640x624.jpg",
+    "creatornewsdesk-header-1920x500.jpg", "creatornewsdesk-header-nologo-1600x600.jpg",
+    "creatornewsdesk-logo-header-228.png"}
+MAX_BODY = 1024 * 1024
+
+
+def private_json_write(destination, value):
+    """Replace config atomically with a private inode, retaining original on error."""
+    destination = Path(destination)
+    if destination.is_symlink():
+        raise ValueError("Configuration symlinks are not supported")
+    descriptor, temporary = tempfile.mkstemp(prefix=".cnd-config-", dir=destination.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as output:
+            json.dump(value, output, indent=2)
+            output.flush()
+            os.fsync(output.fileno())
+        os.replace(temporary, destination)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def create_server(host="127.0.0.1", port=8888, token=None):
+    """An external/private transport does not replace owner authentication."""
+    token = token if token is not None else os.environ.get("CND_DASHBOARD_TOKEN", "")
+    if len(token.encode("utf-8")) < 32:
+        raise ValueError("Set CND_DASHBOARD_TOKEN to at least 32 random bytes before starting")
+    server = HTTPServer((host, port), Handler)
+    server.dashboard_token = token
+    return server
+
+
 class Handler(SimpleHTTPRequestHandler):
     """
     HTTP request handler for dashboard API endpoints.
@@ -84,10 +126,58 @@ class Handler(SimpleHTTPRequestHandler):
     - OpenClaw agent deployment
     """
     
+    def log_message(self, format, *args):
+        # Never log a request target/query that could contain operator credentials.
+        pass
+
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        super().end_headers()
+
+    def authorized(self):
+        expected = getattr(self.server, "dashboard_token", "")
+        supplied = self.headers.get("Authorization", "")
+        if not expected or not hmac.compare_digest(supplied.encode(), ("Bearer " + expected).encode()):
+            self.send_error(401, "Owner authentication required")
+            return False
+        origin = self.headers.get("Origin")
+        if origin:
+            parsed = urlsplit(origin)
+            if parsed.scheme not in {"http", "https"} or parsed.netloc != self.headers.get("Host"):
+                self.send_error(403, "Cross-origin requests denied")
+                return False
+        return True
+
+    def serve_public(self, head=False):
+        target = "dashboard.html" if self.path == "/" else self.path.lstrip("/")
+        if target not in PUBLIC_FILES:
+            self.send_error(404)
+            return
+        file = PUBLIC_ROOT / target
+        if not file.is_file() or file.is_symlink():
+            self.send_error(404)
+            return
+        payload = file.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", self.guess_type(str(file)))
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        if not head:
+            self.wfile.write(payload)
+
+    def do_HEAD(self):
+        self.path = urlsplit(self.path).path
+        self.serve_public(head=True)
+
     def do_GET(self):
         """
         Handle GET requests for API endpoints and static files.
         """
+        self.path = urlsplit(self.path).path
+        if self.path in {"/api/status", "/config.json", "/api/config"} and not self.authorized():
+            return
         # API: Get pipeline status
         if self.path == '/api/status':
             self.send_response(200)
@@ -101,19 +191,32 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             if os.path.exists(CONFIG_FILE):
-                self.wfile.write(open(CONFIG_FILE).read().encode())
+                self.wfile.write(Path(CONFIG_FILE).read_bytes())
             else:
                 self.wfile.write(b'{}')
                 
         # Serve static files (dashboard.html, images, etc.)
         else:
             # Use default file serving for other requests
-            SimpleHTTPRequestHandler.do_GET(self)
+            self.serve_public()
     
     def do_POST(self):
         """
         Handle POST requests for API endpoints.
         """
+        if not self.authorized():
+            return
+        if self.headers.get("Transfer-Encoding"):
+            self.send_error(400, "Chunked bodies are not supported")
+            return
+        try:
+            size = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            self.send_error(400, "Invalid body length")
+            return
+        if not 0 <= size <= MAX_BODY:
+            self.send_error(413, "Request too large")
+            return
         # API: Run the news pipeline
         if self.path == '/api/run-pipeline':
             self.send_response(200)
@@ -178,8 +281,9 @@ class Handler(SimpleHTTPRequestHandler):
             
             try:
                 config_data = json.loads(body)
-                with open(CONFIG_FILE, 'w') as f:
-                    json.dump(config_data, f, indent=2)
+                if not isinstance(config_data, dict):
+                    raise ValueError("Configuration must be a JSON object")
+                private_json_write(CONFIG_FILE, config_data)
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
@@ -277,5 +381,5 @@ if __name__ == '__main__':
     
     # Create and start HTTP server
     # Handler class handles all HTTP requests
-    server = HTTPServer(('0.0.0.0', PORT), Handler)
+    server = create_server(os.environ.get('CND_DASHBOARD_HOST', '127.0.0.1'), PORT)
     server.serve_forever()
