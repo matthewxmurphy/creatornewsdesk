@@ -48,7 +48,8 @@ the existing source and affected private configuration/database/media state.
 Revert only the scoped source change for source rollback; do not restore
 anonymous editorial access or replace live data from this source snapshot.
 
-Future releases follow `YYYY.M.DD.XXX`, America/Chicago. Preserve historical
+Taylor assigns ship-day versions under the owner’s standing release policy; this
+source review does not assign a release. Preserve historical
 versions/artifacts, including this native1.0.0 source, and the actual owner's
 release/public-notes requirements. Source visibility, tested artifact, authorized
 distribution and verified runtime remain separate states.
