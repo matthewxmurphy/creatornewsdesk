@@ -113,8 +113,11 @@ provider work or establish live WordPress/role/HTTP behavior.
 
 The isolated PHP fixture extracts only registration and permission methods, with
 synthetic capabilities and requests. It never loads the plugin, calls a handler,
-queries actual posts, or supplies network/media/provider dependencies. Run from
-the repository root: `php -n -d memory_limit=64M tests/openclaw-permissions.php`.
+queries actual posts, or supplies network/media/provider dependencies.
+Every case requires the exact ordered capability probes; a denied-first batch
+also requires the callback to stop before checking later posts. This enforces
+the trace contract alongside the return value and immutable-input checks.
+Run from the repository root: `php -n -d memory_limit=64M tests/openclaw-permissions.php`.
 Automation must bound the entire child. Native REST/authentication and provider
 acceptance require separate owned staging. Source rollback reverts this scoped
 commit; retain current private state and do not restore broad mutation access as

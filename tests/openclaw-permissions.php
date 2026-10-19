@@ -77,6 +77,7 @@ foreach (['/generate/(?P<id>\d+)', '/generate-og/(?P<id>\d+)', '/tags/analyze/(?
 }
 foreach ([
     ['mixed', ['post_ids'=>[101,202]], true, [101], false, [101,202]],
+    ['denied-first', ['post_ids'=>[202,101]], true, [101], false, [202]],
     ['empty', ['post_ids'=>[]], true, [101], true, []],
     ['own', ['post_ids'=>[101,'00101']], true, [101], true, [101,101]],
     ['editor', ['post_ids'=>[101,202]], true, [101,202], true, [101,202]],
@@ -101,7 +102,8 @@ foreach ($cases as $case) {
     $unchanged = serialize([$case, $actor]) === $before;
     $expectedProbes = [['capability'=>'edit_posts','args'=>[]]];
     foreach ($case['objectProbes'] as $id) { $expectedProbes[] = ['capability'=>'edit_post','args'=>[$id]]; }
-    $results[] = ['id'=>$case['id'], 'allowed'=>$allowed, 'expected'=>$case['expected'], 'passed'=>$allowed === $case['expected'] && $unchanged, 'input_unchanged'=>$unchanged, 'probes'=>$probes, 'candidate_expected_probes'=>$expectedProbes];
+    $probesMatch = $probes === $expectedProbes;
+    $results[] = ['id'=>$case['id'], 'allowed'=>$allowed, 'expected'=>$case['expected'], 'passed'=>$allowed === $case['expected'] && $unchanged && $probesMatch, 'input_unchanged'=>$unchanged, 'probes_match'=>$probesMatch, 'probes'=>$probes, 'candidate_expected_probes'=>$expectedProbes];
 }
 $passed = count(array_filter($results, fn($case) => $case['passed']));
 echo json_encode(['total'=>count($results),'passed'=>$passed,'failed'=>count($results)-$passed,'selected'=>$selected,'routes'=>$routeSummary,'warnings'=>$warnings,'handlers_or_provider_executed'=>false,'results'=>$results], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES) . "\n";
