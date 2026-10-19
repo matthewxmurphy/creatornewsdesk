@@ -44,19 +44,19 @@ class CND_OpenClaw {
         register_rest_route('cnd/v1', '/generate/(?P<id>\d+)', [
             'methods' => 'POST',
             'callback' => [$this, 'generate_image'],
-            'permission_callback' => [$this, 'check_permission']
+            'permission_callback' => [$this, 'check_post_permission']
         ]);
         
         register_rest_route('cnd/v1', '/generate-og/(?P<id>\d+)', [
             'methods' => 'POST',
             'callback' => [$this, 'generate_og_image'],
-            'permission_callback' => [$this, 'check_permission']
+            'permission_callback' => [$this, 'check_post_permission']
         ]);
         
         register_rest_route('cnd/v1', '/batch-generate', [
             'methods' => 'POST',
             'callback' => [$this, 'batch_generate'],
-            'permission_callback' => [$this, 'check_permission']
+            'permission_callback' => [$this, 'check_batch_permission']
         ]);
         
         register_rest_route('cnd/v1', '/stats', [
@@ -68,7 +68,7 @@ class CND_OpenClaw {
         register_rest_route('cnd/v1', '/tags/analyze/(?P<id>\d+)', [
             'methods' => 'POST',
             'callback' => [$this, 'analyze_and_add_tags'],
-            'permission_callback' => [$this, 'check_permission']
+            'permission_callback' => [$this, 'check_post_permission']
         ]);
     }
     
@@ -76,6 +76,39 @@ class CND_OpenClaw {
         return current_user_can('edit_posts');
     }
     
+    /** Require the existing route capability and WordPress access to this post. */
+    public function check_post_permission($request) {
+        return $this->check_permission()
+            && $this->can_edit_post_id($request->get_param('id'));
+    }
+
+    /** Authorize the complete batch before a handler can start provider work. */
+    public function check_batch_permission($request) {
+        if (!$this->check_permission()) {
+            return false;
+        }
+        $data = $request->get_json_params();
+        $post_ids = is_array($data) ? ($data['post_ids'] ?? []) : [];
+        if (!is_array($post_ids)) {
+            return false;
+        }
+        foreach ($post_ids as $post_id) {
+            if (!$this->can_edit_post_id($post_id)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function can_edit_post_id($post_id) {
+        if (!is_int($post_id)
+            && !(is_string($post_id) && preg_match('/^[0-9]+$/D', $post_id))) {
+            return false;
+        }
+        $post_id = (int)$post_id;
+        return $post_id > 0 && current_user_can('edit_post', $post_id);
+    }
+
     public function get_posts_needing_images($request) {
         $limit = $request->get_param('limit') ?: 50;
         

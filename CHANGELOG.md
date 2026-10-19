@@ -35,3 +35,11 @@ deployment or release identity is allocated.
 
 - Fix APP-02; see docs/SECURITY-BOUNDARIES.md for configuration/compatibility and test limits.
 - No production deployment or release-version change.
+
+## Unreleased OpenClaw security maintenance
+
+- Require native per-post edit permission before image/tag generation requests
+  or any batch handler starts. Preserve the existing read-route policy, provider
+  behavior, native versions, identifiers and license/owner/distribution terms.
+- Add isolated request/capability regressions; these are not live WordPress,
+  authentication or provider acceptance. No deployment or release is included.

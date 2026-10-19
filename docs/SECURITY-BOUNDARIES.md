@@ -99,3 +99,23 @@ required remote checks/branch enforcement and release/runtime acceptance remain
 to be assessed in their own scoped maintenance work. The portable helper currently
 has internal distribution terms; public products must not copy it without recorded
 permission. A source commit and offline test pass do not certify a release.
+
+## OpenClaw post mutation permissions
+
+The four cnd/v1 POST routes for featured images, OG images, tag analysis and batch
+generation retain edit_posts and additionally require native edit_post permission
+for each requested positive post ID. A mixed or malformed batch is rejected by
+its permission callback before any handler starts. Empty/missing batches retain
+the existing empty-operation behavior. The four GET routes keep their existing
+edit_posts policy. Provider selection, prompts, query/response formats, versions
+and technical identifiers are unchanged; this source patch does not authorize
+provider work or establish live WordPress/role/HTTP behavior.
+
+The isolated PHP fixture extracts only registration and permission methods, with
+synthetic capabilities and requests. It never loads the plugin, calls a handler,
+queries actual posts, or supplies network/media/provider dependencies. Run from
+the repository root: `php -n -d memory_limit=64M tests/openclaw-permissions.php`.
+Automation must bound the entire child. Native REST/authentication and provider
+acceptance require separate owned staging. Source rollback reverts this scoped
+commit; retain current private state and do not restore broad mutation access as
+a routine operational rollback. Existing license/owner/distribution terms remain.
