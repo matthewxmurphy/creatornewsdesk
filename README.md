@@ -278,7 +278,22 @@ creatornewsdesk/
 
 ## License
 
-MIT License - see LICENSE file
+The repository-root [LICENSE](LICENSE) remains MIT, copyright 2025 Matthew Murphy.
+CND Article Feed already declares GPL version 2 or later in its entrypoint; its
+complete component terms and scope are now alongside the source in
+[cnd-article-feed.LICENSE.txt](cnd-article-feed.LICENSE.txt) and
+[cnd-article-feed.NOTICE.md](cnd-article-feed.NOTICE.md). Keep the separate
+[Chart.js notice](Chart.js-LICENSE.md). This is not a repository-wide relicense.
+
+### CND Article Feed source maintenance
+
+Developer: [Matthew X Murphy](https://MatthewxMurphy.com); product attribution:
+https://builtnotbegged.com. Release owner: CreatorPublishingHub.com. See the
+[component notes](cnd-article-feed.README.md) for architecture, native capability
+requirements, source verification, rollback and standards-adoption gaps.
+Native1.0.0 and all executable bytes remain unchanged by this metadata/legal
+correction. The public source mirror is not a new package/update channel, a
+deployment or release approval; existing updater work remains separate.
 
 ## Credits
 
