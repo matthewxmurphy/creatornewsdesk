@@ -7,6 +7,7 @@ venv/
 env/
 *.log
 pipeline_status.json
+config.json
 .DS_Store
 *.swp
 *.swo

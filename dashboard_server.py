@@ -61,7 +61,8 @@ def load_status():
     """
     if os.path.exists(STATUS_FILE):
         try:
-            return json.load(open(STATUS_FILE))
+            with open(STATUS_FILE, encoding="utf-8") as status_file:
+                return json.load(status_file)
         except:
             # If file is corrupted, return defaults
             pass
@@ -144,11 +145,23 @@ class Handler(SimpleHTTPRequestHandler):
             return False
         origin = self.headers.get("Origin")
         if origin:
-            parsed = urlsplit(origin)
-            if parsed.scheme not in {"http", "https"} or parsed.netloc != self.headers.get("Host"):
+            try:
+                parsed = urlsplit(origin)
+                same_origin = parsed.scheme in {"http", "https"} and parsed.netloc == self.headers.get("Host")
+            except ValueError:
+                same_origin = False
+            if not same_origin:
                 self.send_error(403, "Cross-origin requests denied")
                 return False
         return True
+
+    def request_path(self):
+        """Reject malformed targets before routing can read any private state."""
+        try:
+            return urlsplit(self.path).path
+        except ValueError:
+            self.send_error(400, "Invalid request target")
+            return None
 
     def serve_public(self, head=False):
         target = "dashboard.html" if self.path == "/" else self.path.lstrip("/")
@@ -168,14 +181,18 @@ class Handler(SimpleHTTPRequestHandler):
             self.wfile.write(payload)
 
     def do_HEAD(self):
-        self.path = urlsplit(self.path).path
+        self.path = self.request_path()
+        if self.path is None:
+            return
         self.serve_public(head=True)
 
     def do_GET(self):
         """
         Handle GET requests for API endpoints and static files.
         """
-        self.path = urlsplit(self.path).path
+        self.path = self.request_path()
+        if self.path is None:
+            return
         if self.path in {"/api/status", "/config.json", "/api/config"} and not self.authorized():
             return
         # API: Get pipeline status
