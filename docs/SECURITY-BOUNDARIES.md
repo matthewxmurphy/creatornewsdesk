@@ -54,6 +54,37 @@ assets, traversal/unknown files, symlinks, invalid framing/JSON and atomic-write
 failure preservation. The backup's six existing native-policy cases use mocked
 social adapters; no actual provider/pipeline/host action is executed.
 
+## Article Feed editorial access
+
+Both GET `cnd-feed/v1/articles` and GET `cnd-feed/v1/stats` require BOTH native
+WordPress capabilities `edit_others_posts` and `read_private_posts` before the
+handler queries records or counts. The explicit `cnd_feed_forbidden` WP_Error uses
+WordPress authorization status:401 for anonymous callers,403 for authenticated
+callers missing either capability. Default administrators/editors qualify; custom
+roles qualify only with both capabilities. Default author/contributor/subscriber
+accounts do not qualify.
+
+Worker accounts must authenticate using the site's separately authorized WordPress
+mechanism and hold both capabilities. This intentionally restricts older anonymous
+pipeline consumers. A dashboard bearer token is a separate boundary and does not
+authorize this feed; no live account or credential is configured here.
+
+The identical preceding runtime body was reproduced with real WordPress7.1.3/
+PHP8.5.7 and official SQLite Integration3.1.0 on fresh synthetic state: anonymous
+internal REST dispatch returned a draft's title/excerpt/author/SEO and draft/pending
+statistics. The capability matrix passed 114 checks and 21 internal REST requests
+in each source copy, using nine native actors including custom roles with either
+or both required capabilities. Denials preceded post-domain queries; authorized
+draft/private fields and statistics remained available. Independent readback
+verified all existing synthetic rows and schema. Bootstrap added only two core
+theme-pattern cache options per copy; all raw rows and schema were unchanged across
+the requests. No HTTP/mail attempt, observed request mutation, stderr or late error
+occurred. This source change preserves versions, identifiers, query/response
+formatting and existing licenses/attribution. Native internal REST
+dispatch is not HTTP cookie/application-password authentication, a deployed consumer
+or MySQL/multisite/older-floor qualification. No provider, deployment, updater
+enrollment or release is authorized by these notes.
+
 ## Engineering SOP adoption and remaining gaps
 
 Read https://github.com/matthewxmurphy/developer-standards and the project's own

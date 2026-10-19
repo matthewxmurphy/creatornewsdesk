@@ -67,7 +67,16 @@ class CND_Article_Feed {
     }
 
     public function permission_check() {
-        return true;
+        // Editorial counts and non-public records require both manager capabilities.
+        if ( current_user_can( 'edit_others_posts' ) && current_user_can( 'read_private_posts' ) ) {
+            return true;
+        }
+
+        return new WP_Error(
+            'cnd_feed_forbidden',
+            __( 'You are not allowed to access the editorial feed.', 'cnd-article-feed' ),
+            array( 'status' => rest_authorization_required_code() )
+        );
     }
 
     public function get_articles( WP_REST_Request $request ) {
