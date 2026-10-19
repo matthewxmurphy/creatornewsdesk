@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — Article Feed component attribution and legal scope
+
+- Record Matthew X Murphy developer/product attribution and established
+  CreatorPublishingHub.com release ownership on the public source component.
+  Include its existing GPL-2.0-or-later terms in full, with component notices and
+  focused operational notes; preserve the root MIT2025 Matthew Murphy license
+  and Chart.js notices.
+- Preserve native1.0.0 and the entire executable suffix, including current
+  authorization. No runtime/test rerun, version allocation, updater integration,
+  package distribution, deployment or release is implied by this source change.
+
 ## Unreleased — Article Feed authorization
 
 - Require both `edit_others_posts` and `read_private_posts` for article records and

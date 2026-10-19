@@ -4,12 +4,18 @@
  * Plugin URI:        https://www.creatornewsdesk.com
  * Description:       Provides a JSON feed endpoint for the Creator Newsdesk pipeline to check article status
  * Version:           1.0.0
- * Author:            Creator Newsdesk
- * Author URI:        https://www.creatornewsdesk.com
+ * Author:            Matthew X Murphy
+ * Author URI:        https://MatthewxMurphy.com
+ * Developer:         Matthew X Murphy
+ * Developer URI:     https://MatthewxMurphy.com
+ * Product URI:       https://builtnotbegged.com
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       cnd-article-feed
  * Domain Path:       /languages
+ * Copyright:         2026 MatthewxMurphy.com
+ * Release Owner:     CreatorPublishingHub.com
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
