@@ -1,0 +1,17 @@
+{
+  "wp_admin_token": "",
+  "sites": [
+    {
+      "id": "example-site",
+      "name": "Example site",
+      "active": false,
+      "wp": {"api_base": "https://wordpress.example.invalid/wp-json", "authors": []},
+      "brave_keys": [],
+      "llm": {"provider": "local", "base_url": "http://127.0.0.1:1240", "model": ""},
+      "external_ai": {"xai": {"enabled": false, "api_key": "", "model": ""}},
+      "search": {"structure": {}}
+    }
+  ],
+  "brave_keys": [],
+  "global_settings": {}
+}

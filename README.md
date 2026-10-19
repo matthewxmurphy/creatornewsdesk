@@ -68,10 +68,11 @@ pip install requests beautifulsoup4 python-dateutil
 
 ### 3. Configure
 
-Copy `config.json` and fill in your API keys:
+Start from the placeholder example and keep populated configuration private:
 
 ```bash
-cp config.json config.json.example
+umask 077
+cp config.example.json config.json
 # Edit config.json with your settings
 ```
 
@@ -90,6 +91,8 @@ sudo systemctl enable creatornewsdesk-dashboard
 sudo systemctl start creatornewsdesk-dashboard
 
 # Or manually
+# Supply a random owner-private CND_DASHBOARD_TOKEN before starting.
+# CND_CONFIG_FILE and CND_STATUS_FILE may point outside the source directory.
 python3 dashboard_server.py
 ```
 
@@ -283,3 +286,7 @@ MIT License - see LICENSE file
 - Brave API for news search
 - WordPress and WPGraphQL
 - OpenClaw, ComfyUI, and A1111 for image generation
+
+## Security maintenance
+
+See [security boundaries, configuration and tests](docs/SECURITY-BOUNDARIES.md).

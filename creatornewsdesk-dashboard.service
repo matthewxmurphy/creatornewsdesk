@@ -3,6 +3,8 @@ Description=Creator Newsdesk Dashboard
 After=network.target
 
 [Service]
+# Owner-private environment file supplies CND_DASHBOARD_TOKEN (32+ random bytes).
+EnvironmentFile=/etc/creatornewsdesk/dashboard.env
 Type=simple
 User=mmurphy
 WorkingDirectory=/home/mmurphy/homelab/projects/creatornewsdesk
