@@ -3,8 +3,16 @@
  * Plugin Name: CND OpenClaw Image Generator
  * Description: Auto-generate featured & OG images via OpenClaw/ComfyUI/A1111 for posts
  * Version: 1.1
- * Author: Creator Newsdesk
+ * Author: Matthew X Murphy
+ * Author URI: https://MatthewxMurphy.com
+ * License: MIT
+ * License URI: https://opensource.org/license/mit
  * Requires: Yoast SEO, WPGraphQL
+ *
+ * Copyright (c) 2025 Matthew Murphy.
+ * Developer: Matthew X Murphy, https://MatthewxMurphy.com.
+ * Product attribution: https://builtnotbegged.com.
+ * SPDX-License-Identifier: MIT
  */
 
 if (!defined('ABSPATH')) exit;
