@@ -24,7 +24,7 @@ reads intentionally return private data to the owner. Configuration/status files
 are runtime state, excluded from the source candidate; historical Git copies are
 not removed by this maintenance and are a separate credential/history review.
 
-The two source copies retain their established different OpenClaw defaults.
+This repository now requires explicit supported image-provider selection.
 Chart.js payload and license were matched byte-for-byte against npm 4.4.1
 (the vendored file adds a CDN comment wrapper), including the registry tarball's
 SHA-512 integrity. The vendored SHA-256 is
@@ -100,22 +100,47 @@ to be assessed in their own scoped maintenance work. The portable helper current
 has internal distribution terms; public products must not copy it without recorded
 permission. A source commit and offline test pass do not certify a release.
 
-## OpenClaw post mutation permissions
+## Image Tools post mutation permissions
 
 The four cnd/v1 POST routes for featured images, OG images, tag analysis and batch
 generation retain edit_posts and additionally require native edit_post permission
 for each requested positive post ID. A mixed or malformed batch is rejected by
-its permission callback before any handler starts. Empty/missing batches retain
-the existing empty-operation behavior. The four GET routes keep their existing
-edit_posts policy. Provider selection, prompts, query/response formats, versions
-and technical identifiers are unchanged; this source patch does not authorize
+its permission callback before any handler starts. Empty/missing batches remain
+admitted by the permission callback. The handler separately requires an explicit
+supported method, including for empty batches or missing JSON. An explicit valid
+empty batch retains the existing `results: []` response. The four GET routes keep their existing
+edit_posts policy. The route and permission contracts are retained; explicit provider selection and
+the plugin basename transition are described in README. This does not authorize
 provider work or establish live WordPress/role/HTTP behavior.
 
 The isolated PHP fixture extracts only registration and permission methods, with
 synthetic capabilities and requests. It never loads the plugin, calls a handler,
 queries actual posts, or supplies network/media/provider dependencies. Run from
-the repository root: `php -n -d memory_limit=64M tests/openclaw-permissions.php`.
+the repository root: `php -n -d memory_limit=64M tests/image-tools-permissions.php`.
 Automation must bound the entire child. Native REST/authentication and provider
 acceptance require separate owned staging. Source rollback reverts this scoped
 commit; retain current private state and do not restore broad mutation access as
 a routine operational rollback. Existing license/owner/distribution terms remain.
+
+## Retired provider boundary (source only)
+
+OpenClaw implementation/configuration controls are removed. The old deploy/download
+endpoint literals occur only in intentional denial tests; historical changelog
+entries remain historical. Missing or retired provider selection must not silently
+choose xAI or another service. The renamed permission fixture includes the prepared
+PR7 denied-first/ordered-probe assertions; its former component is superseded, not
+an additional plugin to activate. README records the separate owner rollout gate.
+
+Local source checks: `php -n tests/image-tools-permissions.php`,
+`php -n tests/image-tools-providers.php`, `node tests/image-tools-ui.mjs`,
+`python3 -m unittest discover -s tests -p test_image_worker_provider.py -v`, and the
+existing dashboard security suite above. These use extracted source or synthetic
+loopback state and inert provider doubles, never a WordPress bootstrap, live keys,
+external provider, queue, publishing, installation or runtime agent. The dashboard
+suite includes an authorized retired-endpoint 404 control. Test counts and exact
+commands belong to the execution receipt, not this unqualified source checklist.
+
+SOP adoption remains scoped to source review, regression checks, exact candidate
+scan and these operational notes. The existing missing engineering.json/portable
+CI, complete product guidance and release/native/browser acceptance gaps remain.
+No public copy of the internal standards helper is added.

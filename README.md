@@ -7,7 +7,7 @@ Automated news content pipeline for WordPress with AI-powered article rewriting 
 - **Automated News Fetching** - Fetches news via Brave API from specific brands/creators/platforms
 - **AI Article Rewriting** - Rewrites articles using local llama.cpp or external AI providers (xAI, OpenAI, MiniMax)
 - **WordPress Integration** - Creates posts with categories and tags via WPGraphQL
-- **Image Generation** - Generates featured images and OG images via OpenClaw, ComfyUI, or A1111
+- **Image Generation** - Generates featured images and OG images via explicitly selected xAI, ComfyUI, or A1111
 - **Dashboard** - Web-based dashboard for monitoring and managing the pipeline
 - **Tag Analysis** - Auto-analyzes and adds relevant tags to posts via LLM
 
@@ -27,7 +27,7 @@ Automated news content pipeline for WordPress with AI-powered article rewriting 
 │         ▼                    ▼                    ▼              │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
 │  │ Local LLM    │    │  xAI/OpenAI  │    │  Image Gen   │      │
-│  │ (llama.cpp)  │    │  (External)  │    │ (OpenClaw/   │      │
+│  │ (llama.cpp)  │    │  (External)  │    │ (xAI/         │      │
 │  │ :1240        │    │              │    │  ComfyUI)    │      │
 │  └──────────────┘    └──────────────┘    └──────────────┘      │
 │                              │                                    │
@@ -48,7 +48,7 @@ Automated news content pipeline for WordPress with AI-powered article rewriting 
 - **Software**:
   - Python 3.10+
   - llama.cpp server (for local LLM)
-  - Docker (for OpenClaw, ComfyUI, A1111)
+  - Docker (for local ComfyUI or A1111)
   - WordPress with WPGraphQL plugin
 
 ## Quick Start
@@ -164,20 +164,42 @@ llama-server --host 0.0.0.0 --port 1234 -m /path/to/model.gguf -c 32768
 
 The pipeline uses port 1240 which is an OpenAI-compatible proxy to the local llama-server.
 
-### OpenClaw (Image Generation)
-
-Run via Docker:
-
-```bash
-cd ~/homelab/services/ai/openclaw
-docker-compose up -d
-```
-
 ### ComfyUI (Alternative Image Gen)
 
 ```bash
 docker run -d -p 8188:8188 --name comfyui comfyanonymous/comfyui
 ```
+
+## Image tools source removal and owner rollout
+
+The retired OpenClaw provider, key setting, deploy/download agent controls and
+worker fallback are removed from maintained source. Historical changelog entries
+and explicit rejection tests retain the retired name as evidence.
+
+The retained WordPress plugin is `cnd-image-tools/cnd-image-tools.php` (CND Image
+Tools). Its class/admin slug/settings group are renamed; its existing `cnd/v1`
+routes, per-post permissions, stats/tag handlers and xAI/ComfyUI/A1111 provider
+bodies remain. Existing nonretired `cnd_*` option names are preserved. Requests
+must explicitly select `method=xai`, `comfyui` or `a1111`; absent, retired or invalid
+methods return 400 before post/provider/media work. No paid provider is a default.
+The hourly worker supports its existing ComfyUI adapter only and requires
+`CND_IMAGE_PROVIDER=comfyui` before reading posts or recording usage. Its existing
+ComfyUI queue adapter is not a verified completed-image pipeline.
+
+An owner must separately review deployment, deactivate the old plugin basename
+before activating the new one, then verify routes/permissions on owned staging.
+Do not activate both: they register the same routes. Existing options, old keys,
+runtime agents and installations are not removed by this source change. No live
+activation, option cleanup, provider action or release is authorized here.
+Rollback requires the owner's reviewed plugin activation plan; retain private
+state and the prior Git source. PR7/PR8 retain the retired component and must not
+be integrated as a continuation of this removal. Their final disposition belongs
+to the reviewer/release owner.
+
+Developer: [Matthew X Murphy](https://MatthewxMurphy.com). Product attribution:
+https://builtnotbegged.com. Release owner: CreatorPublishingHub.com. Native plugin
+1.1, root MIT and upstream/component credits are preserved; no version or tested
+release is allocated. See the security notes for source checks and open gates.
 
 ## Dashboard Pages
 
@@ -225,8 +247,8 @@ creatornewsdesk/
 ├── dashboard_server.py     # Python HTTP server
 ├── config.json           # Configuration (not committed)
 ├── cnd_news_pipeline.py   # Main pipeline script
-├── cnd-openclaw/
-│   └── cnd-openclaw.php  # WordPress plugin
+├── cnd-image-tools/
+│   └── cnd-image-tools.php  # WordPress plugin
 ├── *.png, *.jpg          # Logo and header images
 ├── brave_fetch_news.py   # Brave API integration
 ├── cnd_image_worker*.py  # Image generation workers
@@ -246,7 +268,7 @@ creatornewsdesk/
 
 ### Image generation failing
 
-1. Ensure OpenClaw/ComfyUI is running
+1. Select a supported provider explicitly and confirm its existing configuration
 2. Check dashboard for error messages
 3. Verify GPU is available: `nvidia-smi`
 
@@ -300,7 +322,7 @@ deployment or release approval; existing updater work remains separate.
 - llama.cpp for local LLM inference
 - Brave API for news search
 - WordPress and WPGraphQL
-- OpenClaw, ComfyUI, and A1111 for image generation
+- ComfyUI and A1111; xAI integration remains available when explicitly selected for image generation
 
 ## Security maintenance
 

@@ -610,7 +610,7 @@
             <div class="nav-item" data-page="generate" onclick="showPage('generate')" title="Image Generation" draggable="true">
                 <i class="fas fa-magic"></i>
                 <span class="nav-label">Generate</span>
-                <span class="tooltip">ComfyUI, A1111, OpenClaw</span>
+                <span class="tooltip">ComfyUI, A1111</span>
             </div>
             <div class="nav-item" data-page="brave" onclick="showPage('brave')" title="Brave Search" draggable="true">
                 <i class="fa-brands fa-brave"></i>
@@ -920,7 +920,7 @@
                 <div class="panel-title"><i class="fas fa-image"></i> Posts Needing Featured Images (Oldest First)</div>
                 <div class="controls">
                     <select id="imgMethod" style="background:#1a1a24;color:#ccc;padding:8px 12px;border-radius:8px;border:1px solid #2a2a3a;">
-                        <option value="openclaw">OpenClaw</option>
+                        <option value="">Select provider</option>
                         <option value="xai">xAI</option>
                         <option value="comfyui">ComfyUI</option>
                         <option value="a1111">A1111</option>
@@ -959,7 +959,7 @@
     </div>
     </div>
     
-    <!-- Generate Page (ComfyUI, A1111, OpenClaw) -->
+    <!-- Generate Page (ComfyUI, A1111) -->
     <div id="page-generate" class="hidden">
         <div class="two-col">
             <div>
@@ -968,7 +968,7 @@
                         <div class="panel-title"><i class="fas fa-magic"></i> Image Generation</div>
                     </div>
                     <div class="panel-body">
-                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+                        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;">
                             <div class="provider-card" onclick="selectProvider('comfyui')" id="provComfyUI" style="background:#0a0a0f;padding:20px;border-radius:12px;text-align:center;cursor:pointer;border:2px solid transparent;">
                                 <i class="fas fa-robot" style="font-size:2rem;color:#00d4ff;"></i>
                                 <div style="margin-top:10px;font-weight:600;">ComfyUI</div>
@@ -978,11 +978,6 @@
                                 <i class="fas fa-wand-magic-sparkles" style="font-size:2rem;color:#7b2cbf;"></i>
                                 <div style="margin-top:10px;font-weight:600;">A1111</div>
                                 <div style="font-size:0.7rem;color:#555;">Local</div>
-                            </div>
-                            <div class="provider-card" onclick="selectProvider('openclaw')" id="provOpenClaw" style="background:#0a0a0f;padding:20px;border-radius:12px;text-align:center;cursor:pointer;border:2px solid transparent;">
-                                <i class="fas fa-cloud" style="font-size:2rem;color:#00ff88;"></i>
-                                <div style="margin-top:10px;font-weight:600;">OpenClaw</div>
-                                <div style="font-size:0.7rem;color:#555;">Cloud</div>
                             </div>
                         </div>
                         
@@ -1025,29 +1020,10 @@
                             <div style="font-size:0.75rem;color:#555;margin-bottom:6px;">A1111 URL</div>
                             <input type="text" class="form-input" id="a1111Url" value="http://localhost:7860" placeholder="http://localhost:7860">
                         </div>
-                        <div style="margin-bottom:15px;">
-                            <div style="font-size:0.75rem;color:#555;margin-bottom:6px;">OpenClaw URL</div>
-                            <input type="text" class="form-input" id="openclawUrl" value="http://localhost:8050" placeholder="http://localhost:8050">
-                        </div>
                         <button class="btn btn-secondary" onclick="saveGeneratorSettings()" style="width:100%;">Save Settings</button>
                     </div>
                 </div>
                 
-                <div class="panel" style="margin-top:20px;">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-robot"></i> OpenClaw Agent (macOS)</div>
-                    </div>
-                    <div class="panel-body">
-                        <p style="color:#666;font-size:0.8rem;margin-bottom:15px;">
-                            Download and run this agent on your Mac to handle image generation tasks locally.
-                            It will poll the dashboard for work and use xAI when configured.
-                        </p>
-                        <button class="btn btn-primary" onclick="downloadOpenClawAgent()" style="width:100%;">
-                            <i class="fas fa-download"></i> Download Agent Script
-                        </button>
-                        <div id="agentStatus" style="margin-top:10px;font-size:0.8rem;"></div>
-                    </div>
-                </div>
             </div>
             </div>
         </div>
@@ -1599,15 +1575,23 @@
             }
         }
         
-        let selectedProvider = 'openclaw';
+        let selectedProvider = null;
         
         function selectProvider(prov) {
+            if (!['comfyui', 'a1111'].includes(prov)) {
+                selectedProvider = null;
+                return;
+            }
             selectedProvider = prov;
             document.querySelectorAll('.provider-card').forEach(el => el.style.borderColor = 'transparent');
-            document.getElementById('prov' + prov.charAt(0).toUpperCase() + prov.slice(1)).style.borderColor = '#00d4ff';
+            document.getElementById(prov === 'comfyui' ? 'provComfyUI' : 'provA1111').style.borderColor = '#00d4ff';
         }
         
         async function generateImage() {
+            if (!['comfyui', 'a1111'].includes(selectedProvider)) {
+                alert('Choose ComfyUI or A1111 explicitly');
+                return;
+            }
             const prompt = document.getElementById('genPrompt').value;
             if (!prompt) {
                 alert('Please enter a prompt');
@@ -1645,54 +1629,15 @@
                     data = await resp.json();
                     resultDiv.innerHTML = `<div style="color:#00ff88;">A1111 generated! <a href="data:image/png;base64,${data.images[0]}" download="image.png">Download</a></div>`;
                 }
-                else {
-                    // OpenClaw
-                    const site = config.sites.find(s => s.id === currentSiteId);
-                    resp = await fetch(site.wp.api_base + '/cnd/v1/generate/0', {
-                        method: 'POST',
-                        headers: { 
-                            'Authorization': 'Bearer ' + config.wp_admin_token,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ prompt, width, height })
-                    });
-                    data = await resp.json();
-                    resultDiv.innerHTML = data.success ? 
-                        `<div style="color:#00ff88;">Generated! <a href="${data.image_url}" target="_blank">View</a></div>` :
-                        `<div style="color:#ff4444;">Error: ${data.message}</div>`;
-                }
             } catch(e) {
                 resultDiv.innerHTML = `<div style="color:#ff4444;">Error: ${e.message}</div>`;
             }
         }
         
-        async function deployOpenClaw() {
-            const status = document.getElementById('deployStatus');
-            status.innerHTML = '<span style="color:#00d4ff;">Deploying OpenClaw...</span>';
-            
-            try {
-                const resp = await dashboardFetch('/api/deploy-openclaw', { method: 'POST' });
-                const data = await resp.json();
-                if (data.success) {
-                    status.innerHTML = '<span style="color:#00ff88;">✓ OpenClaw deployed! URL: ' + data.url + '</span>';
-                } else {
-                    status.innerHTML = '<span style="color:#ff4444;">Error: ' + data.error + '</span>';
-                }
-            } catch(e) {
-                status.innerHTML = '<span style="color:#ff4444;">Error: ' + e.message + '</span>';
-            }
-        }
-        
-        function downloadOpenClawAgent() {
-            window.location.href = '/api/download-openclaw-agent';
-            document.getElementById('agentStatus').innerHTML = '<span style="color:#00ff88;">Downloaded! Run: chmod +x openclaw-agent.sh && ./openclaw-agent.sh</span>';
-        }
-        
         function saveGeneratorSettings() {
             const settings = {
                 comfyui: document.getElementById('comfyuiUrl').value,
-                a1111: document.getElementById('a1111Url').value,
-                openclaw: document.getElementById('openclawUrl').value
+                a1111: document.getElementById('a1111Url').value
             };
             localStorage.setItem('cnd_gen_settings', JSON.stringify(settings));
             addLog('Generator settings saved', 'success');
@@ -1704,7 +1649,6 @@
                 const s = JSON.parse(saved);
                 document.getElementById('comfyuiUrl').value = s.comfyui || 'http://localhost:8188';
                 document.getElementById('a1111Url').value = s.a1111 || 'http://localhost:7860';
-                document.getElementById('openclawUrl').value = s.openclaw || 'http://localhost:8050';
             }
         }
         
@@ -1753,15 +1697,20 @@
                     document.getElementById('postsNeedImages').innerHTML = html || '<div style="color:#555;text-align:center;padding:20px;">All posts have images! 🎉</div>';
                 }
             } catch(e) {
-                document.getElementById('postsNeedImages').innerHTML = '<div style="color:#ff4444;">Failed to load posts. Make sure OpenClaw plugin is installed.</div>';
+                document.getElementById('postsNeedImages').innerHTML = '<div style="color:#ff4444;">Failed to load posts. Check the CND Image Tools plugin and authorization.</div>';
             }
         }
         
         async function generateSingleImage(postId) {
+            const method = document.getElementById('imgMethod').value;
+            if (!['xai', 'comfyui', 'a1111'].includes(method)) {
+                addLog('Choose an image provider explicitly', 'error');
+                return;
+            }
             addLog(`Generating image for post ${postId}...`, 'info');
             const site = config.sites.find(s => s.id === currentSiteId);
             try {
-                const resp = await fetch(site.wp.api_base + '/cnd/v1/generate/' + postId, {
+                const resp = await fetch(site.wp.api_base + '/cnd/v1/generate/' + postId + '?method=' + method, {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer ' + config.wp_admin_token }
                 });
@@ -1784,6 +1733,10 @@
             
             const endpoint = type === 'og' ? 'posts-needs-og' : 'posts-needs-images';
             const method = document.getElementById('imgMethod').value;
+            if (!['xai', 'comfyui', 'a1111'].includes(method)) {
+                addLog('Choose an image provider explicitly', 'error');
+                return;
+            }
             
             try {
                 const resp = await fetch(site.wp.api_base + '/cnd/v1/' + endpoint + '?limit=50', {
