@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased — remove retired OpenClaw integration
+
+- Remove the retired provider/API/key controls and agent deployment/download paths.
+  Retain the existing image, stats and tag tools under a neutral plugin basename,
+  with unchanged routes, per-post authorization and nonretired option names.
+- Require explicit supported provider selection; no automatic paid provider or
+  fallback. Preserve unrelated source, historical notes/artifacts, native versions,
+  licenses and upstream credits. Owner rollout is required for the basename change;
+  no live plugin/agent/option cleanup, publication or release is included.
+- Retain and retarget permission tests, including prepared PR7 probe assertions;
+  add inert provider rejection and retired endpoint checks. Historical entries below
+  describe prior source states, not maintained OpenClaw functionality.
+
 ## Unreleased — Article Feed component attribution and legal scope
 
 - Record Matthew X Murphy developer/product attribution and established

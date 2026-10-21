@@ -1,17 +1,21 @@
 <?php
 /**
- * Plugin Name: CND OpenClaw Image Generator
- * Description: Auto-generate featured & OG images via OpenClaw/ComfyUI/A1111 for posts
+ * Plugin Name: CND Image Tools
+ * Description: Generate featured & OG images via explicitly selected xAI/ComfyUI/A1111 providers
  * Version: 1.1
- * Author: Creator Newsdesk
+ * Author: Matthew X Murphy
+ * Author URI: https://MatthewxMurphy.com
+ * Product Attribution: https://builtnotbegged.com
+ * Release Owner: CreatorPublishingHub.com
+ * License: MIT
+ * License URI: https://github.com/matthewxmurphy/creatornewsdesk/blob/main/LICENSE
  * Requires: Yoast SEO, WPGraphQL
  */
 
 if (!defined('ABSPATH')) exit;
 
-class CND_OpenClaw {
+class CND_Image_Tools {
     
-    private $api_base = 'https://api.openclaw.ai/v1';
     private $xai_api_key = '';
     
     public function __construct() {
@@ -201,19 +205,23 @@ class CND_OpenClaw {
     
     public function generate_image($request) {
         $post_id = $request->get_param('id');
-        $method = $request->get_param('method') ?: 'openclaw';
+        $method = $request->get_param('method');
         
         return $this->process_image_generation($post_id, $method, 'featured');
     }
     
     public function generate_og_image($request) {
         $post_id = $request->get_param('id');
-        $method = $request->get_param('method') ?: 'openclaw';
+        $method = $request->get_param('method');
         
         return $this->process_image_generation($post_id, $method, 'og');
     }
     
     private function process_image_generation($post_id, $method, $type = 'featured') {
+        if (!in_array($method, ['xai', 'comfyui', 'a1111'], true)) {
+            return new WP_Error('cnd_provider_required', 'Choose xai, comfyui or a1111 explicitly.', ['status' => 400]);
+        }
+
         $post = get_post($post_id);
         
         if (!$post) {
@@ -228,9 +236,7 @@ class CND_OpenClaw {
         
         $result = null;
         
-        if ($method === 'openclaw') {
-            $result = $this->call_openclaw($prompt, $post_id);
-        } elseif ($method === 'xai') {
+        if ($method === 'xai') {
             $result = $this->call_xai($prompt, $post_id);
         } elseif ($method === 'comfyui') {
             $result = $this->call_comfyui($prompt, $post_id);
@@ -265,9 +271,13 @@ class CND_OpenClaw {
     public function batch_generate($request) {
         $data = $request->get_json_params();
         $post_ids = $data['post_ids'] ?? [];
-        $method = $data['method'] ?? 'openclaw';
+        $method = $data['method'] ?? null;
         $type = $data['type'] ?? 'featured';
         
+        if (!in_array($method, ['xai', 'comfyui', 'a1111'], true)) {
+            return new WP_Error('cnd_provider_required', 'Choose xai, comfyui or a1111 explicitly.', ['status' => 400]);
+        }
+
         $results = [];
         foreach ($post_ids as $post_id) {
             $result = $this->process_image_generation($post_id, $method, $type);
@@ -319,29 +329,6 @@ class CND_OpenClaw {
         }
         
         return new WP_REST_Response(['success' => false, 'error' => 'Could not parse tags'], 400);
-    }
-    
-    private function call_openclaw($prompt, $post_id) {
-        $api_key = get_option('cnd_openclaw_key', '');
-        
-        $response = wp_remote_post($this->api_base . '/generate', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $api_key,
-                'Content-Type' => 'application/json'
-            ],
-            'body' => json_encode(['prompt' => $prompt]),
-            'timeout' => 60
-        ]);
-        
-        if (is_wp_error($response)) return $response;
-        
-        $body = json_decode(wp_remote_retrieve_body($response), true);
-        
-        if (isset($body['data']['image_url'])) {
-            return $this->download_and_attach($body['data']['image_url'], $post_id);
-        }
-        
-        return new WP_Error('failed', 'OpenClaw generation failed');
     }
     
     private function call_xai($prompt, $post_id) {
@@ -484,15 +471,14 @@ class CND_OpenClaw {
     }
     
     public function add_admin_menu() {
-        add_menu_page('CND Images', 'CND Images', 'manage_options', 'cnd-openclaw', [$this, 'admin_page'], 'dashicons-images-alt2', 30);
+        add_menu_page('CND Images', 'CND Images', 'manage_options', 'cnd-image-tools', [$this, 'admin_page'], 'dashicons-images-alt2', 30);
     }
     
     public function register_settings() {
-        register_setting('cnd_openclaw', 'cnd_openclaw_key');
-        register_setting('cnd_openclaw', 'cnd_xai_api_key');
-        register_setting('cnd_openclaw', 'cnd_llm_url');
-        register_setting('cnd_openclaw', 'cnd_comfyui_url');
-        register_setting('cnd_openclaw', 'cnd_a1111_url');
+        register_setting('cnd_image_tools', 'cnd_xai_api_key');
+        register_setting('cnd_image_tools', 'cnd_llm_url');
+        register_setting('cnd_image_tools', 'cnd_comfyui_url');
+        register_setting('cnd_image_tools', 'cnd_a1111_url');
     }
     
     public function admin_page() {
@@ -501,10 +487,9 @@ class CND_OpenClaw {
             <h1>CND Image Generator</h1>
             
             <form method="post" action="options.php">
-                <?php settings_fields('cnd_openclaw'); ?>
+                <?php settings_fields('cnd_image_tools'); ?>
                 
                 <table class="form-table">
-                    <tr><th>OpenClaw API Key</th><td><input type="password" name="cnd_openclaw_key" value="<?php echo esc_attr(get_option('cnd_openclaw_key')); ?>" class="regular-text"></td></tr>
                     <tr><th>xAI API Key</th><td><input type="password" name="cnd_xai_api_key" value="<?php echo esc_attr(get_option('cnd_xai_api_key')); ?>" class="regular-text"></td></tr>
                     <tr><th>LLM URL</th><td><input type="text" name="cnd_llm_url" value="<?php echo esc_attr(get_option('cnd_llm_url', 'http://172.17.0.1:1240')); ?>" class="regular-text"></td></tr>
                     <tr><th>ComfyUI URL</th><td><input type="text" name="cnd_comfyui_url" value="<?php echo esc_attr(get_option('cnd_comfyui_url', 'http://localhost:8188')); ?>" class="regular-text"></td></tr>
@@ -520,7 +505,7 @@ class CND_OpenClaw {
                 <li><code>/wp-json/cnd/v1/posts-needs-images</code> - Featured images</li>
                 <li><code>/wp-json/cnd/v1/posts-needs-og</code> - OG images</li>
                 <li><code>/wp-json/cnd/v1/posts-needs-tags</code> - Posts needing tags</li>
-                <li><code>/wp-json/cnd/v1/generate/{id}?method=openclaw|xai|comfyui|a1111</code></li>
+                <li><code>/wp-json/cnd/v1/generate/{id}?method=xai|comfyui|a1111</code></li>
                 <li><code>/wp-json/cnd/v1/generate-og/{id}</code></li>
                 <li><code>/wp-json/cnd/v1/tags/analyze/{id}</code></li>
             </ul>
@@ -529,4 +514,4 @@ class CND_OpenClaw {
     }
 }
 
-new CND_OpenClaw();
+new CND_Image_Tools();

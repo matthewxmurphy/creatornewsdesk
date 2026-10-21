@@ -3,7 +3,7 @@
 Creator Newsdesk Dashboard Server
 
 A simple HTTP server that serves the dashboard UI and provides API endpoints
-for managing the news pipeline, configuration, and OpenClaw agent deployment.
+for managing the news pipeline and configuration.
 
 Endpoints:
     - GET  /              : Serve dashboard files
@@ -12,7 +12,6 @@ Endpoints:
     - POST /api/run-pipeline: Start the news pipeline
     - POST /api/fetch-50  : Fetch 50 articles from Brave API
     - GET  /api/status    : Get pipeline status
-    - POST /api/deploy-openclaw: Deploy OpenClaw agent script
 
 Author: Matthew Murphy
 License: MIT
@@ -124,7 +123,6 @@ class Handler(SimpleHTTPRequestHandler):
     Extends SimpleHTTPRequestHandler to provide REST API for:
     - Pipeline control (start, status)
     - Configuration management
-    - OpenClaw agent deployment
     """
     
     def log_message(self, format, *args):
@@ -311,58 +309,6 @@ class Handler(SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
                 
-        # API: Deploy OpenClaw agent script
-        elif self.path == '/api/deploy-openclaw':
-            self.send_response(200)
-            self.send_header('Content-Type', 'text/plain')
-            self.end_headers()
-            
-            # Load config for API keys
-            config = {}
-            if os.path.exists(CONFIG_FILE):
-                config = json.load(open(CONFIG_FILE))
-            
-            site = config.get("sites", [{}])[0] if config.get("sites") else {}
-            xai_key = ""
-            if site:
-                xai = site.get("external_ai", {}).get("xai", {})
-                xai_key = xai.get("api_key", "")
-            
-            # Generate shell script to set up OpenClaw agent
-            # This script would be run on the user's Mac to set up
-            # the OpenClaw agent for image generation
-            script = f"""#!/bin/bash
-# CND OpenClaw Agent Setup Script
-# Run this on your Mac: chmod +x openclaw-agent.sh && ./openclaw-agent.sh
-
-set -e
-
-echo "Setting up CND OpenClaw Agent..."
-
-mkdir -p ~/.cnd-openclaw
-
-# Write configuration file
-cat > ~/.cnd-openclaw/config.json << 'CFEOF'
-{{
-    "xai_api_key": "YOUR_XAI_KEY_HERE",
-    "dashboard_url": "http://192.168.88.11:8888",
-    "wp_api_base": "https://www.creatornewsdesk.com/wp-json",
-    "providers": {{
-        "openclaw": {{"enabled": true, "url": "http://localhost:8050"}},
-        "xai": {{"enabled": true}},
-        "comfyui": {{"enabled": false, "url": "http://localhost:8188"}},
-        "a1111": {{"enabled": false, "url": "http://localhost:7860"}}
-    }},
-    "fallback_chain": ["openclaw", "xai", "comfyui", "a1111"]
-}}
-CFEOF
-
-echo "Config saved to ~/.cnd-openclaw/config.json"
-echo "Edit the config file to add your API keys, then run the agent."
-"""
-            
-            self.wfile.write(script.encode())
-            
         else:
             self.send_response(404)
             self.end_headers()

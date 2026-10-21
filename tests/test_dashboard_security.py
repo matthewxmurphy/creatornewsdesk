@@ -11,7 +11,7 @@ from pathlib import Path
 import tempfile
 import threading
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
 from urllib.error import HTTPError
 from urllib.request import ProxyHandler, Request, build_opener
 
@@ -110,6 +110,21 @@ class AccessTests(unittest.TestCase):
             load.assert_not_called()
             save.assert_not_called()
             write.assert_not_called()
+        self.assert_private_unchanged()
+
+    def test_retired_agent_endpoint_owner_request_is_not_found_without_state_access(self):
+        # Retired endpoint is a negative control, not an available component.
+        with patch.object(module, "load_status") as load, patch.object(module, "save_status") as save, \
+                patch.object(module, "private_json_write") as write, \
+                patch.object(module, "open", mock_open(read_data='{"sites": []}'), create=True) as config_read:
+            for path in ["/api/deploy-openclaw", "/api/download-openclaw-agent"]:
+                code, body, _ = self.request(path, "POST", b'{}', True)
+                self.assertEqual(code, 404)
+                self.assertEqual(body, b'')
+            load.assert_not_called()
+            save.assert_not_called()
+            write.assert_not_called()
+            config_read.assert_not_called()
         self.assert_private_unchanged()
 
     def test_query_cookie_and_wrong_scheme_cannot_replace_bearer(self):

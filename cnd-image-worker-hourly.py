@@ -6,8 +6,7 @@ Runs hourly via cron or scheduler to process posts that need images.
 
 Features:
 - Rate limiting (hourly and daily caps)
-- Multiple image generation providers (OpenClaw, ComfyUI, A1111)
-- Automatic retry with fallback providers
+- Explicitly selected existing ComfyUI provider; no automatic fallback
 - Usage tracking and statistics
 
 Usage:
@@ -18,6 +17,7 @@ Usage:
     # 0 * * * * cd /path/to/creatornewsdesk && python3 cnd_image_worker_hourly.py
 
 Environment Variables:
+    CND_IMAGE_PROVIDER - Must explicitly be "comfyui" before processing posts
     CND_HOURLY_CAP    - Maximum images per hour (default: 8)
     CND_DAILY_CAP     - Maximum images per day (default: 180)
     CND_RUN_ENABLED   - Set to "0" to disable (default: "1")
@@ -166,44 +166,6 @@ def get_posts_needing_images(limit: int = 10) -> List[Dict]:
     return []
 
 
-def generate_image_openclaw(prompt: str, width: int = 1200, height: int = 630) -> Optional[str]:
-    """
-    Generate image using OpenClaw service.
-    
-    OpenClaw is a containerized image generation service.
-    
-    Args:
-        prompt (str): Image generation prompt
-        width (int): Image width
-        height (int): Image height
-    
-    Returns:
-        str: URL of generated image, or None on failure
-    """
-    openclaw_url = os.environ.get("OPENCLAW_URL", "http://localhost:8050")
-    
-    try:
-        resp = requests.post(
-            f"{openclaw_url}/generate",
-            json={
-                "prompt": prompt,
-                "width": width,
-                "height": height,
-                "num_inference_steps": 20
-            },
-            timeout=120
-        )
-        
-        if resp.status_code == 200:
-            data = resp.json()
-            return data.get("image_url")
-    
-    except Exception as e:
-        print(f"OpenClaw error: {e}")
-    
-    return None
-
-
 def generate_image_comfyui(prompt: str, width: int = 1200, height: int = 630) -> Optional[str]:
     """
     Generate image using ComfyUI API.
@@ -336,6 +298,9 @@ def process_posts(limit: int = 5) -> Dict[str, int]:
         "skipped": 0
     }
     
+    if os.environ.get("CND_IMAGE_PROVIDER") != "comfyui":
+        raise ValueError("Set CND_IMAGE_PROVIDER=comfyui explicitly before processing posts")
+
     # Get posts needing images
     posts = get_posts_needing_images(limit)
     
@@ -354,11 +319,7 @@ def process_posts(limit: int = 5) -> Dict[str, int]:
         prompt = f"Featured image for: {title}. Professional news article illustration."
         
         # Try to generate image
-        image_url = generate_image_openclaw(prompt)
-        
-        if not image_url:
-            # Try fallback
-            image_url = generate_image_comfyui(prompt)
+        image_url = generate_image_comfyui(prompt)
         
         if not image_url:
             stats["failed"] += 1
