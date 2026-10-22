@@ -24,7 +24,7 @@
         "author_uri": "https://MatthewxMurphy.com",
         "license": "GPL-2.0-or-later"
       },
-      "distribution": "review-before-publication",
+      "distribution": "internal",
       "update_uri": "https://updates.builtnotbegged.com/products/cnd-article-feed",
       "version_file": "VERSION",
       "notes": "Requires the active shared connector at or above the declared minimum; adding Update URI alone does not install it. Reserve a new product release before packaging these changed bytes. Confirm the installed basename/stylesheet and complete ZIP root during release enrollment; no runtime target is guessed here."
@@ -42,7 +42,7 @@
         "author_uri": "https://MatthewxMurphy.com",
         "license": "GPL-2.0-or-later"
       },
-      "distribution": "review-before-publication",
+      "distribution": "internal",
       "update_uri": "https://updates.builtnotbegged.com/products/cnd-auto-publisher",
       "version_file": "VERSION",
       "notes": "Requires the active shared connector at or above the declared minimum; adding Update URI alone does not install it. Reserve a new product release before packaging these changed bytes. Confirm the installed basename/stylesheet and complete ZIP root during release enrollment; no runtime target is guessed here."
@@ -60,7 +60,7 @@
         "author_uri": "https://MatthewxMurphy.com",
         "license": "MIT"
       },
-      "distribution": "review-before-publication",
+      "distribution": "internal",
       "update_uri": "https://updates.builtnotbegged.com/products/cnd-openclaw",
       "version_file": "cnd-openclaw/VERSION",
       "notes": "Requires the active shared connector at or above the declared minimum; adding Update URI alone does not install it. Reserve a new product release before packaging these changed bytes. Confirm the installed basename/stylesheet and complete ZIP root during release enrollment; no runtime target is guessed here."
@@ -78,7 +78,7 @@
         "author_uri": "https://MatthewxMurphy.com",
         "license": "MIT"
       },
-      "distribution": "review-before-publication",
+      "distribution": "internal",
       "update_uri": "https://updates.builtnotbegged.com/products/cnd-tip-form",
       "version_file": "VERSION",
       "notes": "Requires the active shared connector at or above the declared minimum; adding Update URI alone does not install it. Reserve a new product release before packaging these changed bytes. Confirm the installed basename/stylesheet and complete ZIP root during release enrollment; no runtime target is guessed here."
