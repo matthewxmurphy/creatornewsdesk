@@ -1,6 +1,7 @@
 <?php
 /**
  * Plugin Name: CND OpenClaw Image Generator
+ * Update URI: https://updates.builtnotbegged.com/products/cnd-openclaw
  * Description: Auto-generate featured & OG images via OpenClaw/ComfyUI/A1111 for posts
  * Version: 2026.10.05.001
  * Author: MatthewxMurphy.com

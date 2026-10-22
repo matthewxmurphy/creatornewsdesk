@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "revision": "2026.10.12.001",
+  "repository": "https://github.com/matthewxmurphy/creatornewsdesk",
+  "service": "https://updates.builtnotbegged.com",
+  "connector": {
+    "plugin": "bng-updates/bng-updates.php",
+    "minimum_version": "2026.10.12.001"
+  },
+  "publication": {
+    "approved": false
+  },
+  "components": [
+    {
+      "id": "cnd-article-feed",
+      "kind": "plugin",
+      "source": "cnd-article-feed.php",
+      "mode": "native",
+      "baseline_version": "2026.10.05.001",
+      "release_pending": true,
+      "headers": {
+        "name": "CND Article Feed",
+        "author": "MatthewxMurphy.com",
+        "author_uri": "https://MatthewxMurphy.com",
+        "license": "GPL-2.0-or-later"
+      },
+      "distribution": "internal",
+      "update_uri": "https://updates.builtnotbegged.com/products/cnd-article-feed",
+      "version_file": "VERSION",
+      "notes": "Requires the active shared connector at or above the declared minimum; adding Update URI alone does not install it. Reserve a new product release before packaging these changed bytes. Confirm the installed basename/stylesheet and complete ZIP root during release enrollment; no runtime target is guessed here."
+    },
+    {
+      "id": "cnd-auto-publisher",
+      "kind": "plugin",
+      "source": "cnd-auto-publisher.php",
+      "mode": "native",
+      "baseline_version": "2026.10.05.001",
+      "release_pending": true,
+      "headers": {
+        "name": "CND Auto Publisher",
+        "author": "MatthewxMurphy.com",
+        "author_uri": "https://MatthewxMurphy.com",
+        "license": "GPL-2.0-or-later"
+      },
+      "distribution": "internal",
+      "update_uri": "https://updates.builtnotbegged.com/products/cnd-auto-publisher",
+      "version_file": "VERSION",
+      "notes": "Requires the active shared connector at or above the declared minimum; adding Update URI alone does not install it. Reserve a new product release before packaging these changed bytes. Confirm the installed basename/stylesheet and complete ZIP root during release enrollment; no runtime target is guessed here."
+    },
+    {
+      "id": "cnd-openclaw",
+      "kind": "plugin",
+      "source": "cnd-openclaw/cnd-openclaw.php",
+      "mode": "native",
+      "baseline_version": "2026.10.05.001",
+      "release_pending": true,
+      "headers": {
+        "name": "CND OpenClaw Image Generator",
+        "author": "MatthewxMurphy.com",
+        "author_uri": "https://MatthewxMurphy.com",
+        "license": "MIT"
+      },
+      "distribution": "internal",
+      "update_uri": "https://updates.builtnotbegged.com/products/cnd-openclaw",
+      "version_file": "cnd-openclaw/VERSION",
+      "notes": "Requires the active shared connector at or above the declared minimum; adding Update URI alone does not install it. Reserve a new product release before packaging these changed bytes. Confirm the installed basename/stylesheet and complete ZIP root during release enrollment; no runtime target is guessed here."
+    },
+    {
+      "id": "cnd-tip-form",
+      "kind": "plugin",
+      "source": "cnd-tip-form.php",
+      "mode": "native",
+      "baseline_version": "2026.10.05.001",
+      "release_pending": true,
+      "headers": {
+        "name": "CND Tip Form",
+        "author": "MatthewxMurphy.com",
+        "author_uri": "https://MatthewxMurphy.com",
+        "license": "MIT"
+      },
+      "distribution": "internal",
+      "update_uri": "https://updates.builtnotbegged.com/products/cnd-tip-form",
+      "version_file": "VERSION",
+      "notes": "Requires the active shared connector at or above the declared minimum; adding Update URI alone does not install it. Reserve a new product release before packaging these changed bytes. Confirm the installed basename/stylesheet and complete ZIP root during release enrollment; no runtime target is guessed here."
+    }
+  ],
+  "notes": "Source enrollment only. Existing releases, licenses, owners and native auto-update preferences are preserved. Paid/private release delivery needs verified product-specific entitlement. No publication or fleet rollout is performed by this declaration."
+}
